@@ -7,9 +7,11 @@ using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Abstractions.Search;
 using CustomerSupportCrm.Application.Common.Authorization;
 using CustomerSupportCrm.Application.Common.Exceptions;
+using CustomerSupportCrm.Application.Features.Settings;
 using CustomerSupportCrm.Application.Features.Tickets.Common;
 using CustomerSupportCrm.Contracts.Ai;
 using CustomerSupportCrm.Contracts.Common;
+using CustomerSupportCrm.Domain.Integrations;
 using CustomerSupportCrm.Domain.KnowledgeBase;
 using CustomerSupportCrm.Domain.Roles;
 using CustomerSupportCrm.Domain.Tickets;
@@ -458,7 +460,9 @@ internal sealed class AiEndpoints : IEndpoint
     {
         var group = app.MapGroup("/ai").WithTags("AI").RequireAuthorization(Permissions.AiUse);
 
-        group.MapGet("/status", (AiAssistant ai) => ApiResults.Ok(new AiStatusResponse(ai.IsConfigured)))
+        // Enabled only when a provider is configured and the agent-assist toggle is on, so the panel can hide itself.
+        group.MapGet("/status", async (AiAssistant ai, SettingsReader settings, CancellationToken ct) =>
+                ApiResults.Ok(new AiStatusResponse(ai.IsConfigured && await settings.IsEnabledAsync(SystemSettings.AiAgentAssistEnabled, ct))))
             .WithName("GetAiStatus")
             .Produces<ApiResponse<AiStatusResponse>>();
 
