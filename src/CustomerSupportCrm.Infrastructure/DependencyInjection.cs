@@ -1,3 +1,4 @@
+using CustomerSupportCrm.Application.Abstractions.Ai;
 using CustomerSupportCrm.Application.Abstractions.Auditing;
 using CustomerSupportCrm.Application.Abstractions.Authentication;
 using CustomerSupportCrm.Application.Abstractions.Channels;
@@ -10,6 +11,7 @@ using CustomerSupportCrm.Application.Abstractions.Search;
 using CustomerSupportCrm.Application.Features.Channels;
 using CustomerSupportCrm.Application.Features.Dashboard;
 using CustomerSupportCrm.Application.Features.Sla;
+using CustomerSupportCrm.Infrastructure.Ai;
 using CustomerSupportCrm.Infrastructure.Auditing;
 using CustomerSupportCrm.Infrastructure.Authentication;
 using CustomerSupportCrm.Infrastructure.Authorization;
@@ -113,6 +115,9 @@ public static class DependencyInjection
         services.AddSingleton<IChannelWebhookAdapter, SmsWebhookAdapter>();
 
         services.AddRecurringRequest<DispatchOutboxCommand>(TimeSpan.FromSeconds(15));
+
+        services.AddOptions<AiOptions>().BindConfiguration(AiOptions.SectionName);
+        services.AddSingleton<IAiCompletionClient, AnthropicAiClient>();
     }
 
     private static void AddIdentityServices(this IServiceCollection services)

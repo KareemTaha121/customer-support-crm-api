@@ -3,6 +3,7 @@ using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Notifications;
 using CustomerSupportCrm.Application.Behaviors;
 using CustomerSupportCrm.Application.Common.Authorization;
+using CustomerSupportCrm.Application.Features.Ai;
 using CustomerSupportCrm.Application.Features.Attachments;
 using CustomerSupportCrm.Application.Features.Authentication.Common;
 using CustomerSupportCrm.Application.Features.Channels;
@@ -45,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<EscalationExecutor>();
         services.AddScoped<CustomerMessenger>();
         services.AddScoped<ReportFilterFactory>();
+        services.AddScoped<AiAssistant>();
         services.AddScoped<CustomerResolver>();
         services.AddScoped<IChatAccessValidator, ChatAccessValidator>();
 

@@ -7,4 +7,7 @@ public static class RateLimitPolicies
 
     /// <summary>Per-client limit for anonymous endpoints (web forms, portal sign-up, feedback, chat).</summary>
     public const string Public = "public";
+
+    /// <summary>Per-client limit for AI endpoints (cost control).</summary>
+    public const string Ai = "ai";
 }

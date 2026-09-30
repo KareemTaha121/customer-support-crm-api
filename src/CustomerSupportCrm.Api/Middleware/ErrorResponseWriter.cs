@@ -53,6 +53,7 @@ internal static class ErrorResponseWriter
         StatusCodes.Status415UnsupportedMediaType => ErrorCodes.UnsupportedMediaType,
         StatusCodes.Status422UnprocessableEntity => ErrorCodes.BusinessRuleViolation,
         StatusCodes.Status429TooManyRequests => ErrorCodes.RateLimited,
+        StatusCodes.Status503ServiceUnavailable => ErrorCodes.ServiceUnavailable,
         < 500 => ErrorCodes.BadRequest,
         _ => ErrorCodes.InternalError,
     };

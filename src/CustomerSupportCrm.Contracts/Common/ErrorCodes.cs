@@ -19,6 +19,7 @@ public static class ErrorCodes
     public const string BusinessRuleViolation = "BUSINESS_RULE_VIOLATION";
     public const string RateLimited = "RATE_LIMITED";
     public const string InternalError = "INTERNAL_ERROR";
+    public const string ServiceUnavailable = "SERVICE_UNAVAILABLE";
 
     // Field-level validation codes.
     public const string Required = "REQUIRED";

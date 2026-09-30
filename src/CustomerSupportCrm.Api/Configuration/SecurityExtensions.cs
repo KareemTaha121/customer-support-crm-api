@@ -100,6 +100,11 @@ internal static class SecurityExtensions
                     });
             });
 
+            // AI: per signed-in user (or IP for the anonymous chatbot), 20 requests per minute.
+            options.AddPolicy(RateLimitPolicies.Ai, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.User.FindFirst("sub")?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
             options.AddPolicy(RateLimitPolicies.Authentication, context =>
             {
                 var limits = context.RequestServices.GetRequiredService<IOptions<RateLimitOptions>>().Value;

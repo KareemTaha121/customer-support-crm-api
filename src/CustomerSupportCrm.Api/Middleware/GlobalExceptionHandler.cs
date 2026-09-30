@@ -62,6 +62,8 @@ internal sealed partial class GlobalExceptionHandler(ILogger<GlobalExceptionHand
         NotFoundException => StatusCodes.Status404NotFound,
         ConflictException => StatusCodes.Status409Conflict,
         ForbiddenException => StatusCodes.Status403Forbidden,
+        ServiceUnavailableException => StatusCodes.Status503ServiceUnavailable,
+        UnprocessableException => StatusCodes.Status422UnprocessableEntity,
         _ => StatusCodes.Status400BadRequest,
     };
 
