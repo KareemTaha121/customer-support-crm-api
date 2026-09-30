@@ -48,4 +48,64 @@
   <data name="INTERNAL_ERROR" xml:space="preserve">
     <value>حدث خطأ غير متوقع.</value>
   </data>
+  <data name="INVALID_CREDENTIALS" xml:space="preserve">
+    <value>البريد الإلكتروني أو كلمة المرور غير صحيحة.</value>
+  </data>
+  <data name="ACCOUNT_LOCKED" xml:space="preserve">
+    <value>الحساب مقفل مؤقتًا. يرجى المحاولة لاحقًا.</value>
+  </data>
+  <data name="ACCOUNT_DISABLED" xml:space="preserve">
+    <value>الحساب معطّل.</value>
+  </data>
+  <data name="INVALID_REFRESH_TOKEN" xml:space="preserve">
+    <value>انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.</value>
+  </data>
+  <data name="REFRESH_TOKEN_INACTIVE" xml:space="preserve">
+    <value>انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.</value>
+  </data>
+  <data name="CSRF_VALIDATION_FAILED" xml:space="preserve">
+    <value>تعذّر التحقق من الطلب.</value>
+  </data>
+  <data name="INVALID_CURRENT_PASSWORD" xml:space="preserve">
+    <value>كلمة المرور الحالية غير صحيحة.</value>
+  </data>
+  <data name="USER_NOT_FOUND" xml:space="preserve">
+    <value>المستخدم غير موجود.</value>
+  </data>
+  <data name="EMAIL_TAKEN" xml:space="preserve">
+    <value>يوجد مستخدم بهذا البريد الإلكتروني بالفعل.</value>
+  </data>
+  <data name="UNKNOWN_ROLE" xml:space="preserve">
+    <value>دور واحد أو أكثر غير موجود.</value>
+  </data>
+  <data name="CANNOT_DISABLE_SELF" xml:space="preserve">
+    <value>لا يمكنك تعطيل حسابك.</value>
+  </data>
+  <data name="LAST_ADMINISTRATOR" xml:space="preserve">
+    <value>يجب وجود مسؤول نشط واحد على الأقل.</value>
+  </data>
+  <data name="ROLE_NOT_FOUND" xml:space="preserve">
+    <value>الدور غير موجود.</value>
+  </data>
+  <data name="ROLE_NAME_TAKEN" xml:space="preserve">
+    <value>يوجد دور بهذا الاسم بالفعل.</value>
+  </data>
+  <data name="ROLE_IN_USE" xml:space="preserve">
+    <value>الدور مُسند إلى مستخدمين.</value>
+  </data>
+  <data name="ROLE_IS_SYSTEM" xml:space="preserve">
+    <value>لا يمكن تعديل أدوار النظام أو حذفها.</value>
+  </data>
+  <data name="UNKNOWN_PERMISSION" xml:space="preserve">
+    <value>صلاحية واحدة أو أكثر غير موجودة.</value>
+  </data>
+  <data name="INVALID_EMAIL_ADDRESS" xml:space="preserve">
+    <value>عنوان البريد الإلكتروني غير صالح.</value>
+  </data>
+  <data name="INVALID_DISPLAY_NAME" xml:space="preserve">
+    <value>الاسم المعروض غير صالح.</value>
+  </data>
+  <data name="INVALID_ROLE_NAME" xml:space="preserve">
+    <value>اسم الدور غير صالح.</value>
+  </data>
 </root>

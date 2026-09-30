@@ -15,6 +15,10 @@ public static class ApiResults
     public static ApiResult<T> Created<T>(string location, T data, string? message = null) =>
         new(StatusCodes.Status201Created, ApiResponse.Ok(data, message), location);
 
+    /// <summary>A successful action with no payload (e.g. logout).</summary>
+    public static ApiResult<object?> Success(string? message = null) =>
+        new(StatusCodes.Status200OK, ApiResponse.Ok<object?>(null, message));
+
     public static ApiResult<IReadOnlyList<T>> Paged<T>(IReadOnlyList<T> items, PaginationMeta meta) =>
         new(StatusCodes.Status200OK, ApiResponse.Ok(items, meta: meta));
 }

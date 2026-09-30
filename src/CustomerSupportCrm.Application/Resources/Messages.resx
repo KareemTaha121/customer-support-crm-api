@@ -48,4 +48,64 @@
   <data name="INTERNAL_ERROR" xml:space="preserve">
     <value>An unexpected error occurred.</value>
   </data>
+  <data name="INVALID_CREDENTIALS" xml:space="preserve">
+    <value>The email or password is incorrect.</value>
+  </data>
+  <data name="ACCOUNT_LOCKED" xml:space="preserve">
+    <value>The account is temporarily locked. Try again later.</value>
+  </data>
+  <data name="ACCOUNT_DISABLED" xml:space="preserve">
+    <value>The account is disabled.</value>
+  </data>
+  <data name="INVALID_REFRESH_TOKEN" xml:space="preserve">
+    <value>The session has expired. Please sign in again.</value>
+  </data>
+  <data name="REFRESH_TOKEN_INACTIVE" xml:space="preserve">
+    <value>The session has expired. Please sign in again.</value>
+  </data>
+  <data name="CSRF_VALIDATION_FAILED" xml:space="preserve">
+    <value>The request could not be verified.</value>
+  </data>
+  <data name="INVALID_CURRENT_PASSWORD" xml:space="preserve">
+    <value>The current password is incorrect.</value>
+  </data>
+  <data name="USER_NOT_FOUND" xml:space="preserve">
+    <value>The user was not found.</value>
+  </data>
+  <data name="EMAIL_TAKEN" xml:space="preserve">
+    <value>A user with this email already exists.</value>
+  </data>
+  <data name="UNKNOWN_ROLE" xml:space="preserve">
+    <value>One or more roles do not exist.</value>
+  </data>
+  <data name="CANNOT_DISABLE_SELF" xml:space="preserve">
+    <value>You cannot disable your own account.</value>
+  </data>
+  <data name="LAST_ADMINISTRATOR" xml:space="preserve">
+    <value>At least one active administrator is required.</value>
+  </data>
+  <data name="ROLE_NOT_FOUND" xml:space="preserve">
+    <value>The role was not found.</value>
+  </data>
+  <data name="ROLE_NAME_TAKEN" xml:space="preserve">
+    <value>A role with this name already exists.</value>
+  </data>
+  <data name="ROLE_IN_USE" xml:space="preserve">
+    <value>The role is assigned to users.</value>
+  </data>
+  <data name="ROLE_IS_SYSTEM" xml:space="preserve">
+    <value>System roles cannot be modified or deleted.</value>
+  </data>
+  <data name="UNKNOWN_PERMISSION" xml:space="preserve">
+    <value>One or more permissions do not exist.</value>
+  </data>
+  <data name="INVALID_EMAIL_ADDRESS" xml:space="preserve">
+    <value>The email address is not valid.</value>
+  </data>
+  <data name="INVALID_DISPLAY_NAME" xml:space="preserve">
+    <value>The display name is not valid.</value>
+  </data>
+  <data name="INVALID_ROLE_NAME" xml:space="preserve">
+    <value>The role name is not valid.</value>
+  </data>
 </root>

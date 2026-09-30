@@ -2,6 +2,7 @@ using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Common.Exceptions;
 using CustomerSupportCrm.Contracts.Common;
 using CustomerSupportCrm.Domain.Common;
+using CustomerSupportCrm.Domain.Roles;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -36,7 +37,7 @@ internal sealed class TestEndpoints : IEndpoint
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/_test");
+        var group = app.MapGroup("/_test").AllowAnonymous();
 
         group.MapGet("/ok", () => ApiResults.Ok(new Widget("w-1", "Widget")));
 
@@ -64,5 +65,10 @@ internal sealed class TestEndpoints : IEndpoint
         {
             throw new InvalidOperationException(SecretDetail);
         });
+
+        // Separate group: AllowAnonymous on a parent would override these requirements.
+        var secure = app.MapGroup("/_test-secure");
+        secure.MapGet("/authenticated", () => ApiResults.Ok("hello"));
+        secure.MapGet("/users-manage", () => ApiResults.Ok("managed")).RequireAuthorization(Permissions.UsersManage);
     }
 }

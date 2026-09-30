@@ -1,6 +1,7 @@
 using System.Reflection;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Behaviors;
+using CustomerSupportCrm.Application.Features.Authentication.Common;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -22,6 +23,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
         services.AddEndpoints(assembly);
         services.AddLocalization();
+        services.AddScoped<UserSessionService>();
 
         return services;
     }

@@ -28,7 +28,11 @@ CorrelationIdMiddleware        read/generate X-Correlation-Id, push to log conte
 RequestLocalization            en/ar from query, cookie, Accept-Language
 Serilog request logging        one event per request
 ExceptionHandler               GlobalExceptionHandler → standard error envelope
-StatusCodePages                envelope for empty-body 4xx/5xx (unknown route, 405, 401)
+StatusCodePages                envelope for empty-body 4xx/5xx (unknown route, 405, 401, 403, 429)
+Cors                           configured frontend origins only, with credentials
+Authentication                 JWT bearer (see docs/security.md)
+Authorization                  /api/v1 requires a user; per-endpoint permission policies
+RateLimiter                    per-IP limit on sign-in endpoints
 Endpoint                       IEndpoint → ISender.Send(command/query)
   MediatR ValidationBehavior   FluentValidation → ValidationException
   Handler                      orchestrates; domain enforces invariants
@@ -49,11 +53,40 @@ Application/Features/Tickets/Create/
 
 `IEndpoint` implementations, handlers and validators are discovered from the Application assembly automatically. Endpoints are mapped under `/api/v1`.
 
-Handlers throw `NotFoundException` / `ConflictException` / `ForbiddenException` (Application) or entities throw `DomainException` (Domain); they never catch to build responses.
+Handlers throw `NotFoundException` / `ConflictException` / `ForbiddenException` / `UnauthorizedException` (Application) or entities throw `DomainException` (Domain); they never catch to build responses.
+
+When several slices of one feature share logic, it lives in that feature's `Common/` folder (e.g. `Authentication/Common/UserSessionService`, `Users/Common/UserQueries`), never in a global service. Tiny slices without orchestration (the static permission catalog) map an endpoint without a MediatR request.
+
+### Current features
+
+| Feature | Slices |
+|---|---|
+| Authentication | Login, Refresh, Logout, GetCurrentUser, ChangePassword |
+| Users | Create, List, GetById, SetRoles, Disable, Enable |
+| Roles | List, GetById, Create, Update, Delete, ListPermissions |
+| AuditLogs | List |
+
+### Application abstractions
+
+| Abstraction | Implementation (Infrastructure) |
+|---|---|
+| `IApplicationDbContext` | `ApplicationDbContext` (handlers use EF Core directly) |
+| `ICurrentUser` | `HttpCurrentUser`: JWT claims of the current request |
+| `IRequestContext` | `HttpRequestContext`: correlation id, IP, user agent |
+| `IPasswordHasher` | `IdentityPasswordHasher` |
+| `ITokenService` | `TokenService`: JWT creation, refresh-token generation and hashing |
+| `IAuditTrail` | `AuditTrail`: adds `AuditLog` rows to the current unit of work |
+| `TimeProvider` (BCL) | `TimeProvider.System` |
 
 ## Persistence
 
 Single `ApplicationDbContext` (Infrastructure/Persistence) on PostgreSQL via Npgsql, with snake_case naming (`EFCore.NamingConventions`). Entity configurations are `IEntityTypeConfiguration<T>` classes in `Persistence/Configurations`, applied automatically. No generic repository or unit of work.
+
+- Strongly typed ids (`UserId`, `RoleId`) are stored as `uuid` through value converters registered in `ConfigureConventions`. New ids are UUIDv7 (time-ordered, index-friendly).
+- Aggregates that can be edited concurrently use PostgreSQL `xmin` as the optimistic concurrency token (`HasXminConcurrencyToken`). A lost race surfaces as `409 CONFLICT`.
+- `AuditableEntityInterceptor` stamps `created_at/by` and `updated_at/by` on `IAuditableEntity`, including when only child rows changed.
+- Migrations live in `Persistence/Migrations` and are treated as generated code by analyzers.
+- `DatabaseInitializer` applies migrations and seeds reference data: the Administrator system role (resynced with the permission catalog every run), Manager/Agent defaults on first run, and the first administrator from `Bootstrap:*` when no users exist.
 
 ## Configuration
 
@@ -62,12 +95,20 @@ Options classes bound from configuration sections and validated at startup (`Val
 | Section | Options | Notes |
 |---|---|---|
 | `Database` | `DatabaseOptions` | `ConnectionString` is required; empty in `appsettings.json` so production must supply it. |
+| `Database` | `DatabaseOptions.InitializeOnStartup` | Migrate + seed at startup. `true` only in Development; elsewhere run `--init-database` as a deployment step. |
+| `Jwt` | `JwtOptions` | Issuer, audience, signing key (required, at least 32 chars), token lifetimes. |
+| `Cors` | `CorsSettings` | Allowed frontend origins. |
+| `RateLimiting:Authentication` | `RateLimitOptions` | Permits per window for sign-in endpoints. |
+| `Bootstrap` | `BootstrapOptions` | First administrator (only used while the users table is empty). |
 | `Serilog` | Serilog | Levels/properties from config; console sink is text in Development, compact JSON elsewhere. |
 
 ## Decisions log
 
 - ADR 0001 — Vertical slices; endpoints live in Application.
+- ADR 0002 — Authentication: own user model, JWT + rotating refresh cookie, permissions in code.
 - ADR 0003 — API response contract.
 - MediatR pinned to 12.5.0 (last Apache-2.0 release). 13+ requires a commercial license key.
-- `TimeProvider` (BCL) will be used for time instead of a custom clock abstraction.
+- `TimeProvider` (BCL) is used for time instead of a custom clock abstraction.
+- Domain events and their dispatch arrive with the first feature that reacts to them (tickets). Phase 2 audits explicitly through `IAuditTrail` inside the same transaction.
+- The permission catalog endpoint lives in the Roles feature: a `Features.Permissions` namespace would shadow the domain `Permissions` class in sibling features.
 - Resources: `Messages.resx` is the neutral (English) resource; `Messages.ar.resx` holds Arabic.

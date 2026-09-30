@@ -56,11 +56,11 @@ Every `/api/v1` response, success or failure, uses the same envelope (`Contracts
 |---|---|---|
 | 400 | `VALIDATION_ERROR` | FluentValidation failure (one entry per field error) |
 | 400 | `BAD_REQUEST` | Malformed body or unbindable parameters |
-| 401 | `UNAUTHORIZED` | Missing/invalid authentication |
+| 401 | `UNAUTHORIZED` | Missing/invalid access token, `UnauthorizedException` |
 | 403 | `FORBIDDEN` | `ForbiddenException`, authorization failure |
 | 404 | `NOT_FOUND` | `NotFoundException`, unknown route |
 | 405 | `METHOD_NOT_ALLOWED` | Wrong HTTP method |
-| 409 | `CONFLICT` | `ConflictException` |
+| 409 | `CONFLICT` | `ConflictException`; concurrent edit (`xmin`) or unique-index race |
 | 413 | `PAYLOAD_TOO_LARGE` | Body exceeds limit |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Wrong content type |
 | 422 | `BUSINESS_RULE_VIOLATION` | `DomainException` (invariant or state transition) |
@@ -82,6 +82,26 @@ For `NotFoundException`, `ConflictException`, `ForbiddenException` and `DomainEx
 | `INVALID` | Any other rule |
 
 A validator can set a custom stable code with `.WithErrorCode("TICKET_TITLE_TOO_LONG")`; UPPER_SNAKE_CASE codes pass through unchanged.
+
+### Feature error codes (Phase 2)
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `INVALID_CREDENTIALS` | 401 | Unknown email or wrong password (deliberately indistinguishable) |
+| `ACCOUNT_LOCKED` | 401 | Too many failed sign-ins; retry later |
+| `ACCOUNT_DISABLED` | 401 | The account is disabled |
+| `INVALID_REFRESH_TOKEN` | 401 | Missing, expired, revoked or reused refresh token: sign in again |
+| `CSRF_VALIDATION_FAILED` | 403 | `X-CSRF-Protection` header missing on refresh/logout |
+| `INVALID_CURRENT_PASSWORD` | 400 | Field error on `currentPassword` |
+| `EMAIL_TAKEN` | 409 | Another user has this email |
+| `UNKNOWN_ROLE` | 400 | Field error on `roleIds` |
+| `USER_NOT_FOUND` / `ROLE_NOT_FOUND` | 404 | |
+| `CANNOT_DISABLE_SELF` | 409 | |
+| `LAST_ADMINISTRATOR` | 409 | The change would leave no active administrator |
+| `ROLE_NAME_TAKEN` | 409 | Case-insensitive name clash |
+| `ROLE_IN_USE` | 409 | Unassign users before deleting |
+| `ROLE_IS_SYSTEM` | 422 | System roles are immutable |
+| `UNKNOWN_PERMISSION` | 400 | Field error on `permissions` |
 
 ## Pagination
 

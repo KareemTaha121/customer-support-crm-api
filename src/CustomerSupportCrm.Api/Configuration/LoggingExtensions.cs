@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Security.Claims;
+using CustomerSupportCrm.Application.Abstractions.Authentication;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
@@ -56,7 +57,7 @@ internal static class LoggingExtensions
                     diagnostics.Set("Route", endpoint.RoutePattern.RawText);
                 }
 
-                if (context.User.FindFirstValue(ClaimTypes.NameIdentifier) is { } userId)
+                if (context.User.FindFirstValue(CrmClaimTypes.Subject) is { } userId)
                 {
                     diagnostics.Set("UserId", userId);
                 }

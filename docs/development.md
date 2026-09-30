@@ -13,6 +13,8 @@ dotnet tool restore
 dotnet run --project src/CustomerSupportCrm.Api --launch-profile https
 ```
 
+In Development the API migrates and seeds the database at startup, creating the administrator from `Bootstrap:AdminEmail` / `Bootstrap:AdminPassword` in `appsettings.Development.json`. Sign in through `POST /api/v1/auth/login`, then use the Swagger UI **Authorize** button with the returned `accessToken`. Refresh and logout need the refresh cookie and the `X-CSRF-Protection` header, so exercise them from the web app or the tests rather than Swagger.
+
 - Swagger UI: https://localhost:5001/swagger
 - OpenAPI: https://localhost:5001/openapi/v1.json
 - Health: `/health/live`, `/health/ready`
@@ -33,13 +35,23 @@ dotnet test
 |---|---|
 | Domain.Tests, Application.Tests | nothing |
 | Api.Tests | nothing (in-memory host, unreachable DB on purpose) |
-| IntegrationTests | running Docker daemon (Testcontainers starts `postgres:17-alpine`) |
+| IntegrationTests | a running Docker daemon (Testcontainers starts `postgres:17-alpine`), **or** `CRM_TEST_POSTGRES` set to a connection string for an existing server; a throwaway `crm_it_<guid>` database is created and dropped |
+
+```bash
+CRM_TEST_POSTGRES="Host=localhost;Username=postgres;Password=..." dotnet test tests/CustomerSupportCrm.IntegrationTests
+```
 
 ## Migrations
 
 ```bash
 dotnet ef migrations add <MeaningfulName> --project src/CustomerSupportCrm.Infrastructure --startup-project src/CustomerSupportCrm.Api --output-dir Persistence/Migrations
 dotnet ef database update --project src/CustomerSupportCrm.Infrastructure --startup-project src/CustomerSupportCrm.Api
+```
+
+Outside Development, apply migrations and seed data with the built API:
+
+```bash
+dotnet CustomerSupportCrm.Api.dll --init-database
 ```
 
 ## Code quality

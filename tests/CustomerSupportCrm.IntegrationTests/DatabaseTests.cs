@@ -1,15 +1,17 @@
 using System.Net;
 using CustomerSupportCrm.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CustomerSupportCrm.IntegrationTests;
 
-public sealed class DatabaseTests(PostgresApiFactory factory) : IClassFixture<PostgresApiFactory>
+[Collection(PostgresCollection.Name)]
+public sealed class DatabaseTests(PostgresApiFactory factory)
 {
     [Fact]
     public async Task ReadinessIsHealthyWhenDatabaseIsReachable()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateApiClient();
 
         using var response = await client.GetAsync(new Uri("/health/ready", UriKind.Relative));
 
@@ -18,12 +20,26 @@ public sealed class DatabaseTests(PostgresApiFactory factory) : IClassFixture<Po
     }
 
     [Fact]
-    public async Task DbContextConnectsToPostgres()
+    public async Task MigrationsAreFullyApplied()
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        Assert.True(await dbContext.Database.CanConnectAsync());
-        Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", dbContext.Database.ProviderName);
+        Assert.Empty(await dbContext.Database.GetPendingMigrationsAsync());
+    }
+
+    [Fact]
+    public async Task SeedsSystemAndDefaultRoles()
+    {
+        var api = new ApiTestClient(factory.CreateApiClient());
+        var admin = await api.LoginAsAdminAsync();
+
+        var roles = (await api.GetDataAsync("/api/v1/roles", admin.AccessToken)).EnumerateArray().ToList();
+        var administrator = roles.Single(r => r.GetProperty("name").GetString() == "Administrator");
+
+        Assert.True(administrator.GetProperty("isSystem").GetBoolean());
+        Assert.Equal(Domain.Roles.Permissions.All.Count, administrator.GetProperty("permissions").GetArrayLength());
+        Assert.Contains(roles, r => r.GetProperty("name").GetString() == "Manager");
+        Assert.Contains(roles, r => r.GetProperty("name").GetString() == "Agent");
     }
 }

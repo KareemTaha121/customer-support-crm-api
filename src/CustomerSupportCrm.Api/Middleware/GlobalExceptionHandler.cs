@@ -5,6 +5,8 @@ using CustomerSupportCrm.Domain.Common;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace CustomerSupportCrm.Api.Middleware;
 
@@ -29,6 +31,9 @@ internal sealed partial class GlobalExceptionHandler(ILogger<GlobalExceptionHand
                 (StatusFor(app), ErrorResponseWriter.CategoryFor(StatusFor(app)), Single(httpContext, app.Code, app.Message)),
             DomainException domain =>
                 (StatusCodes.Status422UnprocessableEntity, ErrorCodes.BusinessRuleViolation, Single(httpContext, domain.Code, domain.Message)),
+            // Concurrent edit, or a unique index beaten by a parallel request after the handler's check.
+            DbUpdateConcurrencyException or DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } =>
+                (StatusCodes.Status409Conflict, ErrorCodes.Conflict, null),
             BadHttpRequestException badRequest =>
                 (badRequest.StatusCode, ErrorResponseWriter.CategoryFor(badRequest.StatusCode), null),
             _ =>
@@ -53,6 +58,7 @@ internal sealed partial class GlobalExceptionHandler(ILogger<GlobalExceptionHand
 
     private static int StatusFor(AppException exception) => exception switch
     {
+        UnauthorizedException => StatusCodes.Status401Unauthorized,
         NotFoundException => StatusCodes.Status404NotFound,
         ConflictException => StatusCodes.Status409Conflict,
         ForbiddenException => StatusCodes.Status403Forbidden,
