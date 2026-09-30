@@ -1,12 +1,10 @@
 using CustomerSupportCrm.Application.Abstractions.Persistence;
-using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace CustomerSupportCrm.Infrastructure.Persistence;
 
-internal sealed class PostgresSequenceGenerator(ApplicationDbContext db) : ISequenceGenerator
+internal sealed class PostgresSequenceGenerator(SqlRunner sql) : ISequenceGenerator
 {
     public async Task<long> NextValueAsync(string sequenceName, CancellationToken cancellationToken) =>
-        await db.Database
-            .SqlQuery<long>($"SELECT nextval({sequenceName}::regclass) AS \"Value\"")
-            .SingleAsync(cancellationToken);
+        await sql.ScalarAsync<long>("SELECT nextval(@name::regclass)", [new NpgsqlParameter("name", sequenceName)], cancellationToken);
 }

@@ -8,6 +8,7 @@ using CustomerSupportCrm.Application.Features.Authentication.Common;
 using CustomerSupportCrm.Application.Features.Channels;
 using CustomerSupportCrm.Application.Features.Customers.Common;
 using CustomerSupportCrm.Application.Features.Notifications;
+using CustomerSupportCrm.Application.Features.Reports;
 using CustomerSupportCrm.Application.Features.Sla;
 using CustomerSupportCrm.Application.Features.Tickets;
 using FluentValidation;
@@ -43,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<AssignmentEngine>();
         services.AddScoped<EscalationExecutor>();
         services.AddScoped<CustomerMessenger>();
+        services.AddScoped<ReportFilterFactory>();
         services.AddScoped<CustomerResolver>();
         services.AddScoped<IChatAccessValidator, ChatAccessValidator>();
 
