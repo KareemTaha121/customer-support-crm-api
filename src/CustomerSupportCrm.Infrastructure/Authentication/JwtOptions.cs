@@ -22,4 +22,7 @@ public sealed class JwtOptions
 
     [Range(1, 90)]
     public int RefreshTokenLifetimeDays { get; init; } = 14;
+
+    [Range(1, 24)]
+    public int PortalTokenLifetimeHours { get; init; } = 8;
 }

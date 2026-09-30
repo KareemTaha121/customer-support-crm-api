@@ -5,7 +5,7 @@ namespace CustomerSupportCrm.Application.Abstractions.Authentication;
 
 /// <summary>
 /// The caller of the current request. Application code uses this instead of HttpContext.User.
-/// Organization, branch and department context is added in Phase 3.
+/// Branch/department data scope is resolved through <c>IAccessScopeProvider</c>.
 /// </summary>
 public interface ICurrentUser
 {

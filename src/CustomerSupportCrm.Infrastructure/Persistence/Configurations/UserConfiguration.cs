@@ -27,6 +27,12 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(user => user.Roles).UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        builder.HasMany(user => user.Scopes)
+            .WithOne()
+            .HasForeignKey(scope => scope.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(user => user.Scopes).UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.Ignore(user => user.IsActive);
         builder.Ignore(user => user.RoleIds);
 

@@ -14,6 +14,8 @@ public interface ITokenService
 
     AccessToken CreateAccessToken(User user, Guid sessionId, IReadOnlyCollection<string> roles, IReadOnlyCollection<string> permissions);
 
+    AccessToken CreateCustomerAccessToken(Guid accountId, Guid customerId, string email, string name);
+
     GeneratedRefreshToken GenerateRefreshToken();
 
     string HashRefreshToken(string token);

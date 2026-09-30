@@ -15,7 +15,7 @@ internal sealed class CreateUserEndpoint : IEndpoint
         app.MapPost("/users", async (CreateUserRequest request, ISender sender, CancellationToken cancellationToken) =>
             {
                 var user = await sender.Send(
-                    new CreateUserCommand(request.Email, request.DisplayName, request.Password, request.RoleIds ?? []),
+                    new CreateUserCommand(request.Email, request.DisplayName, request.Password, request.RoleIds ?? [], request.Scopes),
                     cancellationToken);
                 return ApiResults.Created($"/api/v1/users/{user.Id}", user);
             })

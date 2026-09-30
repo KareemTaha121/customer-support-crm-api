@@ -56,6 +56,6 @@ public sealed class RoleTests
     public void PermissionCatalogCodesAreUniqueAndGrouped()
     {
         Assert.Equal(Permissions.All.Count, Permissions.All.Distinct(StringComparer.Ordinal).Count());
-        Assert.All(Permissions.All, code => Assert.Matches("^[a-z]+\\.[a-z]+$", code));
+        Assert.All(Permissions.All, code => Assert.Matches("^[a-z]+\\.[a-z_]+$", code));
     }
 }

@@ -24,11 +24,9 @@ internal sealed class TokenService(IOptions<JwtOptions> options, TimeProvider ti
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        var now = time.GetUtcNow();
-        var expiresAt = now.AddMinutes(_options.AccessTokenLifetimeMinutes);
-
         List<Claim> claims =
         [
+            new(CrmClaimTypes.Actor, ActorTypes.Staff),
             new(CrmClaimTypes.Subject, user.Id.Value.ToString()),
             new(CrmClaimTypes.Email, user.Email),
             new(CrmClaimTypes.Name, user.DisplayName),
@@ -37,6 +35,27 @@ internal sealed class TokenService(IOptions<JwtOptions> options, TimeProvider ti
             .. roles.Select(role => new Claim(CrmClaimTypes.Role, role)),
             .. permissions.Select(permission => new Claim(CrmClaimTypes.Permission, permission)),
         ];
+
+        return CreateToken(claims, TimeSpan.FromMinutes(_options.AccessTokenLifetimeMinutes));
+    }
+
+    /// <summary>Portal token: no permissions, no refresh; the customer signs in again after it expires.</summary>
+    public AccessToken CreateCustomerAccessToken(Guid accountId, Guid customerId, string email, string name) =>
+        CreateToken(
+            [
+                new(CrmClaimTypes.Actor, ActorTypes.Customer),
+                new(CrmClaimTypes.Subject, accountId.ToString()),
+                new(CrmClaimTypes.CustomerId, customerId.ToString()),
+                new(CrmClaimTypes.Email, email),
+                new(CrmClaimTypes.Name, name),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            ],
+            TimeSpan.FromHours(_options.PortalTokenLifetimeHours));
+
+    private AccessToken CreateToken(List<Claim> claims, TimeSpan lifetime)
+    {
+        var now = time.GetUtcNow();
+        var expiresAt = now + lifetime;
 
         var descriptor = new SecurityTokenDescriptor
         {

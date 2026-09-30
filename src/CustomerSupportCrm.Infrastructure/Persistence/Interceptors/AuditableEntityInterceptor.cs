@@ -5,7 +5,10 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace CustomerSupportCrm.Infrastructure.Persistence.Interceptors;
 
-/// <summary>Stamps <see cref="IAuditableEntity"/> creation and modification fields.</summary>
+/// <summary>
+/// Stamps <see cref="IAuditableEntity"/> creation/modification fields and turns deletes of
+/// <see cref="ISoftDeletable"/> entities into updates.
+/// </summary>
 internal sealed class AuditableEntityInterceptor(TimeProvider time, ICurrentUser currentUser) : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
@@ -31,6 +34,14 @@ internal sealed class AuditableEntityInterceptor(TimeProvider time, ICurrentUser
 
         var now = time.GetUtcNow();
         Guid? actor = currentUser.IsAuthenticated ? currentUser.UserId.Value : null;
+
+        foreach (var entry in context.ChangeTracker.Entries<ISoftDeletable>().Where(e => e.State == EntityState.Deleted))
+        {
+            entry.State = EntityState.Modified;
+            entry.Property(nameof(ISoftDeletable.IsDeleted)).CurrentValue = true;
+            entry.Property(nameof(ISoftDeletable.DeletedAt)).CurrentValue = now;
+            entry.Property(nameof(ISoftDeletable.DeletedBy)).CurrentValue = actor;
+        }
 
         foreach (var entry in context.ChangeTracker.Entries<IAuditableEntity>())
         {

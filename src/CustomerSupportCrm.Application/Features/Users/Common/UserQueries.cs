@@ -34,6 +34,15 @@ internal static class UserQueries
                     .OrderBy(r => r.Name)
                     .Select(r => new { r.Id, r.Name })
                     .ToList(),
+                Scopes = u.Scopes
+                    .Select(scope => new
+                    {
+                        scope.BranchId,
+                        BranchName = db.Branches.Where(b => b.Id == scope.BranchId).Select(b => b.Name).FirstOrDefault(),
+                        scope.DepartmentId,
+                        DepartmentName = db.Departments.Where(d => d.Id == scope.DepartmentId).Select(d => d.Name).FirstOrDefault(),
+                    })
+                    .ToList(),
             })
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(UserErrors.UserNotFound, "The user was not found.");
@@ -45,6 +54,7 @@ internal static class UserQueries
             row.Status.ToString(),
             row.LockoutEndsAt > now,
             [.. row.Roles.Select(r => new RoleReference(r.Id.Value, r.Name))],
+            [.. row.Scopes.Select(s => new UserScopeResponse(s.BranchId, s.BranchName ?? string.Empty, s.DepartmentId, s.DepartmentName))],
             row.LastLoginAt,
             row.CreatedAt,
             row.UpdatedAt);
@@ -70,6 +80,32 @@ internal static class UserQueries
         }
 
         return requested;
+    }
+
+    /// <summary>Checks that every branch exists and every department belongs to its branch.</summary>
+    public static async Task<IReadOnlyList<(Guid BranchId, Guid? DepartmentId)>> ResolveScopesAsync(
+        IApplicationDbContext db,
+        IReadOnlyList<UserScopeRequest> scopes,
+        CancellationToken cancellationToken)
+    {
+        var branchIds = scopes.Select(s => s.BranchId).Distinct().ToList();
+        var departmentIds = scopes.Where(s => s.DepartmentId != null).Select(s => s.DepartmentId!.Value).Distinct().ToList();
+
+        var existingBranches = await db.Branches.Where(b => branchIds.Contains(b.Id)).Select(b => b.Id).ToListAsync(cancellationToken);
+        var departments = await db.Departments.Where(d => departmentIds.Contains(d.Id)).Select(d => new { d.Id, d.BranchId }).ToListAsync(cancellationToken);
+
+        var invalid = scopes.Any(s =>
+            !existingBranches.Contains(s.BranchId)
+            || (s.DepartmentId is { } departmentId && !departments.Any(d => d.Id == departmentId && d.BranchId == s.BranchId)));
+        if (invalid)
+        {
+            throw new ValidationException(
+            [
+                new ValidationFailure("Scopes", "One or more branches or departments are invalid.") { ErrorCode = CustomerSupportCrm.Application.Common.Authorization.OrganizationErrors.DepartmentNotInBranch },
+            ]);
+        }
+
+        return [.. scopes.Select(s => (s.BranchId, s.DepartmentId)).Distinct()];
     }
 
     public static async Task<RoleId?> GetAdministratorRoleIdAsync(IApplicationDbContext db, CancellationToken cancellationToken)

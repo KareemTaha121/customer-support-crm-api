@@ -23,6 +23,7 @@ public sealed class User : Entity<UserId>, IAuditableEntity
     public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
 
     private readonly List<UserRole> _roles = [];
+    private readonly List<UserScope> _scopes = [];
 
     private User()
     {
@@ -53,6 +54,9 @@ public sealed class User : Entity<UserId>, IAuditableEntity
     public DateTimeOffset? LastLoginAt { get; private set; }
 
     public IReadOnlyCollection<UserRole> Roles => _roles;
+
+    /// <summary>Branches/departments whose data the user may access (see <see cref="UserScope"/>).</summary>
+    public IReadOnlyCollection<UserScope> Scopes => _scopes;
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -103,6 +107,18 @@ public sealed class User : Entity<UserId>, IAuditableEntity
         }
     }
 
+    /// <summary>Replaces the user's data scope. A null department grants the whole branch.</summary>
+    public void SetScopes(IEnumerable<(Guid BranchId, Guid? DepartmentId)> scopes)
+    {
+        var requested = scopes.Distinct().ToList();
+
+        _scopes.RemoveAll(existing => !requested.Contains((existing.BranchId, existing.DepartmentId)));
+        foreach (var (branchId, departmentId) in requested.Where(s => !_scopes.Any(e => e.BranchId == s.BranchId && e.DepartmentId == s.DepartmentId)))
+        {
+            _scopes.Add(new UserScope(Id, branchId, departmentId));
+        }
+    }
+
     public bool HasRole(RoleId roleId) => _roles.Any(r => r.RoleId == roleId);
 
     public bool IsLockedOut(DateTimeOffset now) => LockoutEndsAt > now;
@@ -133,6 +149,32 @@ public sealed class User : Entity<UserId>, IAuditableEntity
         FailedLoginAttempts = 0;
         LockoutEndsAt = null;
     }
+}
+
+/// <summary>
+/// Grants access to a branch (<see cref="DepartmentId"/> null) or to one department of it.
+/// </summary>
+public sealed class UserScope
+{
+    private UserScope()
+    {
+    }
+
+    internal UserScope(UserId userId, Guid branchId, Guid? departmentId)
+    {
+        Id = Guid.CreateVersion7();
+        UserId = userId;
+        BranchId = branchId;
+        DepartmentId = departmentId;
+    }
+
+    public Guid Id { get; private set; }
+
+    public UserId UserId { get; private set; }
+
+    public Guid BranchId { get; private set; }
+
+    public Guid? DepartmentId { get; private set; }
 }
 
 public sealed class UserRole

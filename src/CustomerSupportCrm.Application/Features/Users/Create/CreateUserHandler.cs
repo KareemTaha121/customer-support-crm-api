@@ -32,6 +32,10 @@ internal sealed class CreateUserHandler(
 
         var roleIds = await UserQueries.ResolveRoleIdsAsync(db, request.RoleIds, localizer, cancellationToken);
         var user = User.Create(email, request.DisplayName, passwordHasher.Hash(request.Password), roleIds);
+        if (request.Scopes is { Count: > 0 } scopes)
+        {
+            user.SetScopes(await UserQueries.ResolveScopesAsync(db, scopes, cancellationToken));
+        }
 
         db.Users.Add(user);
         audit.Record(

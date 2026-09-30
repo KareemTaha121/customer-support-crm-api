@@ -13,4 +13,7 @@ public sealed class BootstrapOptions
     public string AdminDisplayName { get; init; } = "Administrator";
 
     public string? AdminPassword { get; init; }
+
+    /// <summary>Name of the organization created on first initialization.</summary>
+    public string OrganizationName { get; init; } = "Customer Support";
 }

@@ -1,14 +1,20 @@
 using CustomerSupportCrm.Application.Abstractions.Auditing;
 using CustomerSupportCrm.Application.Abstractions.Authentication;
+using CustomerSupportCrm.Application.Abstractions.Files;
 using CustomerSupportCrm.Application.Abstractions.Http;
+using CustomerSupportCrm.Application.Abstractions.Notifications;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Infrastructure.Auditing;
 using CustomerSupportCrm.Infrastructure.Authentication;
 using CustomerSupportCrm.Infrastructure.Authorization;
+using CustomerSupportCrm.Infrastructure.BackgroundJobs;
+using CustomerSupportCrm.Infrastructure.Files;
 using CustomerSupportCrm.Infrastructure.Persistence;
 using CustomerSupportCrm.Infrastructure.Persistence.Interceptors;
 using CustomerSupportCrm.Infrastructure.Persistence.Seed;
+using CustomerSupportCrm.Infrastructure.Realtime;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +36,7 @@ public static class DependencyInjection
 
         services.AddPersistence();
         services.AddIdentityServices();
+        services.AddPlatformServices();
 
         return services;
     }
@@ -62,6 +69,18 @@ public static class DependencyInjection
             .AddDbContextCheck<ApplicationDbContext>("database", tags: [ReadinessTag]);
     }
 
+    private static void AddPlatformServices(this IServiceCollection services)
+    {
+        services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.SectionName);
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
+
+        services.AddSignalR();
+        services.AddSingleton<IUserIdProvider, SubjectUserIdProvider>();
+        services.AddSingleton<IRealtimeNotifier, SignalRRealtimeNotifier>();
+
+        services.AddOptions<BackgroundJobOptions>().BindConfiguration(BackgroundJobOptions.SectionName);
+    }
+
     private static void AddIdentityServices(this IServiceCollection services)
     {
         services.AddOptions<JwtOptions>()
@@ -91,6 +110,21 @@ public static class DependencyInjection
                     NameClaimType = CrmClaimTypes.Name,
                     RoleClaimType = CrmClaimTypes.Role,
                 };
+
+                // Browsers cannot set headers on WebSocket requests; SignalR sends the token in the query.
+                bearer.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = token;
+                        }
+
+                        return Task.CompletedTask;
+                    },
+                };
             });
 
         services.AddPermissionPolicies();
@@ -98,6 +132,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddSingleton<ITokenService, TokenService>();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
+        services.AddScoped<ICurrentCustomer, HttpCurrentCustomer>();
         services.AddScoped<IRequestContext, HttpRequestContext>();
         services.AddScoped<IAuditTrail, AuditTrail>();
     }

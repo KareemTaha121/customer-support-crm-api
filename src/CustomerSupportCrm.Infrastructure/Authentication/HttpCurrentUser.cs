@@ -12,10 +12,11 @@ internal sealed class HttpCurrentUser(IHttpContextAccessor accessor) : ICurrentU
 {
     private ClaimsPrincipal? Principal => accessor.HttpContext?.User;
 
-    public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated == true;
+    public bool IsAuthenticated =>
+        Principal?.Identity?.IsAuthenticated == true && Principal.HasClaim(CrmClaimTypes.Actor, ActorTypes.Staff);
 
     public UserId UserId =>
-        Guid.TryParse(Principal?.FindFirstValue(CrmClaimTypes.Subject), out var id)
+        IsAuthenticated && Guid.TryParse(Principal?.FindFirstValue(CrmClaimTypes.Subject), out var id)
             ? new UserId(id)
             : throw new UnauthorizedException();
 
