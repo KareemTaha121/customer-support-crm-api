@@ -4,6 +4,7 @@ using CustomerSupportCrm.Application.Abstractions.Files;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Notifications;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
+using CustomerSupportCrm.Application.Abstractions.Search;
 using CustomerSupportCrm.Application.Features.Dashboard;
 using CustomerSupportCrm.Application.Features.Sla;
 using CustomerSupportCrm.Infrastructure.Auditing;
@@ -15,6 +16,7 @@ using CustomerSupportCrm.Infrastructure.Persistence;
 using CustomerSupportCrm.Infrastructure.Persistence.Interceptors;
 using CustomerSupportCrm.Infrastructure.Persistence.Seed;
 using CustomerSupportCrm.Infrastructure.Realtime;
+using CustomerSupportCrm.Infrastructure.Search;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +66,7 @@ public static class DependencyInjection
         });
         services.AddScoped<IApplicationDbContext>(serviceProvider => serviceProvider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<ISequenceGenerator, PostgresSequenceGenerator>();
+        services.AddScoped<IKnowledgeSearch, PostgresKnowledgeSearch>();
 
         services.AddOptions<BootstrapOptions>().BindConfiguration(BootstrapOptions.SectionName);
         services.AddScoped<DatabaseInitializer>();

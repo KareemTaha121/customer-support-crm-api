@@ -27,6 +27,17 @@ public sealed class RateLimitOptions
     public int WindowSeconds { get; init; } = 60;
 }
 
+public sealed class PublicRateLimitOptions
+{
+    public const string SectionName = "RateLimiting:Public";
+
+    [Range(1, 10_000)]
+    public int PermitLimit { get; init; } = 30;
+
+    [Range(1, 3_600)]
+    public int WindowSeconds { get; init; } = 60;
+}
+
 internal static class SecurityExtensions
 {
     /// <summary>
@@ -57,6 +68,10 @@ internal static class SecurityExtensions
             .BindConfiguration(RateLimitOptions.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
+        services.AddOptions<PublicRateLimitOptions>()
+            .BindConfiguration(PublicRateLimitOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         services.AddRateLimiter(options =>
         {
@@ -71,6 +86,19 @@ internal static class SecurityExtensions
 
                 return ValueTask.CompletedTask;
             };
+
+            options.AddPolicy(RateLimitPolicies.Public, context =>
+            {
+                var limits = context.RequestServices.GetRequiredService<IOptions<PublicRateLimitOptions>>().Value;
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = limits.PermitLimit,
+                        Window = TimeSpan.FromSeconds(limits.WindowSeconds),
+                        QueueLimit = 0,
+                    });
+            });
 
             options.AddPolicy(RateLimitPolicies.Authentication, context =>
             {
