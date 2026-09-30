@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../CustomerSupportCrm.Application/CustomerSupportCrm.Application.csproj" />
+    <ProjectReference Include="../CustomerSupportCrm.Domain/CustomerSupportCrm.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

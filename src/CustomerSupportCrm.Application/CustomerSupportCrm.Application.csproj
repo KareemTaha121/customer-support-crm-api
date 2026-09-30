@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../CustomerSupportCrm.Domain/CustomerSupportCrm.Domain.csproj" />
+    <ProjectReference Include="../CustomerSupportCrm.Contracts/CustomerSupportCrm.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

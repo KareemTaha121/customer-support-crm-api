@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: crm-postgres
+    environment:
+      POSTGRES_DB: customer_support_crm
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crm_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - crm-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm -d customer_support_crm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  crm-postgres-data:
