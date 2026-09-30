@@ -28,11 +28,13 @@ CorrelationIdMiddleware        read/generate X-Correlation-Id, push to log conte
 RequestLocalization            en/ar from query, cookie, Accept-Language
 Serilog request logging        one event per request
 ExceptionHandler               GlobalExceptionHandler → standard error envelope
-StatusCodePages                envelope for empty-body 4xx/5xx (unknown route, 405, 401, 403, 429)
+StatusCodePages                envelope for empty-body 4xx/5xx (unknown route, 405, 401, 403, 413, 429)
+Hsts / HttpsRedirection        HSTS outside Development
+SecureHeadersMiddleware        nosniff, X-Frame-Options DENY, Referrer-Policy, CSP (not on Swagger UI)
 Cors                           configured frontend origins only, with credentials
 Authentication                 JWT bearer (see docs/security.md)
 Authorization                  /api/v1 requires a user; per-endpoint permission policies
-RateLimiter                    per-IP limit on sign-in endpoints
+RateLimiter                    global per-user/IP limit (health excluded) + per-endpoint policies
 Endpoint                       IEndpoint → ISender.Send(command/query)
   MediatR ValidationBehavior   FluentValidation → ValidationException
   Handler                      orchestrates; domain enforces invariants
@@ -97,8 +99,10 @@ Options classes bound from configuration sections and validated at startup (`Val
 | `Database` | `DatabaseOptions` | `ConnectionString` is required; empty in `appsettings.json` so production must supply it. |
 | `Database` | `DatabaseOptions.InitializeOnStartup` | Migrate + seed at startup. `true` only in Development; elsewhere run `--init-database` as a deployment step. |
 | `Jwt` | `JwtOptions` | Issuer, audience, signing key (required, at least 32 chars), token lifetimes. |
-| `Cors` | `CorsSettings` | Allowed frontend origins. |
+| `Cors` | `CorsSettings` | Allowed frontend origins. Required outside Development (startup fails when empty). |
 | `RateLimiting:Authentication` | `RateLimitOptions` | Permits per window for sign-in endpoints. |
+| `RateLimiting:Global` | `GlobalRateLimitOptions` | Permits per window per signed-in user (fallback IP) for every request except `/health`. Default 300/min. |
+| `RequestLimits` | `RequestLimitOptions` | `MaxRequestBodyBytes` for Kestrel (default 25 MB, above the 20 MB attachment limit). Larger bodies get 413 `PAYLOAD_TOO_LARGE`. |
 | `Bootstrap` | `BootstrapOptions` | First administrator (only used while the users table is empty). |
 | `Serilog` | Serilog | Levels/properties from config; console sink is text in Development, compact JSON elsewhere. |
 

@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Options;
 
 namespace CustomerSupportCrm.Api.Configuration;
@@ -38,15 +39,42 @@ public sealed class PublicRateLimitOptions
     public int WindowSeconds { get; init; } = 60;
 }
 
+public sealed class GlobalRateLimitOptions
+{
+    public const string SectionName = "RateLimiting:Global";
+
+    [Range(1, 100_000)]
+    public int PermitLimit { get; init; } = 300;
+
+    [Range(1, 3_600)]
+    public int WindowSeconds { get; init; } = 60;
+}
+
+public sealed class RequestLimitOptions
+{
+    public const string SectionName = "RequestLimits";
+
+    /// <summary>Kestrel body limit. Must stay above the 20 MB attachment limit plus multipart overhead.</summary>
+    [Range(1_048_576, 1_073_741_824)]
+    public long MaxRequestBodyBytes { get; init; } = 25 * 1024 * 1024;
+}
+
 internal static class SecurityExtensions
 {
     /// <summary>
     /// Credentialed CORS for the configured frontend origins only (the refresh cookie needs
     /// credentials, which the CORS spec forbids combining with a wildcard origin).
     /// </summary>
-    public static IServiceCollection AddApiCors(this IServiceCollection services)
+    public static IServiceCollection AddApiCors(this IServiceCollection services, IHostEnvironment environment)
     {
-        services.AddOptions<CorsSettings>().BindConfiguration(CorsSettings.SectionName);
+        // Development and the integration-test host may run without origins; a deployed API may not.
+        var originsRequired = !environment.IsDevelopment() && !environment.IsEnvironment("Test");
+        services.AddOptions<CorsSettings>()
+            .BindConfiguration(CorsSettings.SectionName)
+            .Validate(
+                settings => !originsRequired || settings.AllowedOrigins.Length > 0,
+                $"{CorsSettings.SectionName}:AllowedOrigins must list at least one origin outside Development.")
+            .ValidateOnStart();
         services.AddCors();
         services.AddOptions<CorsOptions>()
             .Configure<IOptions<CorsSettings>>((cors, settings) => cors.AddDefaultPolicy(policy => policy
@@ -72,6 +100,10 @@ internal static class SecurityExtensions
             .BindConfiguration(PublicRateLimitOptions.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
+        services.AddOptions<GlobalRateLimitOptions>()
+            .BindConfiguration(GlobalRateLimitOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         services.AddRateLimiter(options =>
         {
@@ -86,6 +118,25 @@ internal static class SecurityExtensions
 
                 return ValueTask.CompletedTask;
             };
+
+            // Every request except health probes: per signed-in user, falling back to the client IP.
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase))
+                {
+                    return RateLimitPartition.GetNoLimiter("health");
+                }
+
+                var limits = context.RequestServices.GetRequiredService<IOptions<GlobalRateLimitOptions>>().Value;
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    context.User.FindFirst("sub")?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = limits.PermitLimit,
+                        Window = TimeSpan.FromSeconds(limits.WindowSeconds),
+                        QueueLimit = 0,
+                    });
+            });
 
             options.AddPolicy(RateLimitPolicies.Public, context =>
             {
@@ -119,6 +170,25 @@ internal static class SecurityExtensions
             });
         });
 
+        return services;
+    }
+
+    /// <summary>
+    /// Kestrel hardening: configurable request body limit (oversized bodies become 413
+    /// PAYLOAD_TOO_LARGE) and no Server header.
+    /// </summary>
+    public static IServiceCollection AddApiRequestLimits(this IServiceCollection services)
+    {
+        services.AddOptions<RequestLimitOptions>()
+            .BindConfiguration(RequestLimitOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<KestrelServerOptions>()
+            .Configure<IOptions<RequestLimitOptions>>((kestrel, limits) =>
+            {
+                kestrel.AddServerHeader = false;
+                kestrel.Limits.MaxRequestBodySize = limits.Value.MaxRequestBodyBytes;
+            });
         return services;
     }
 }

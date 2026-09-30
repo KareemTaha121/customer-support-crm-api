@@ -50,7 +50,15 @@ Bearer-authenticated endpoints are not exposed to CSRF (browsers never attach th
 
 ## CORS
 
-Only origins listed in `Cors:AllowedOrigins` are allowed, with credentials. The list is empty by default; wildcard origins are never used. Exposed headers: `X-Correlation-Id`, `Content-Language`, `Retry-After`.
+Only origins listed in `Cors:AllowedOrigins` are allowed, with credentials. The list is empty by default; wildcard origins are never used, and outside Development (and the `Test` host) startup fails when the list is empty. Exposed headers: `X-Correlation-Id`, `Content-Language`, `Retry-After`.
+
+## Response hardening
+
+- `SecureHeadersMiddleware` adds `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` and `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` to every response. The Swagger UI (Development only) is served before it and keeps working.
+- HSTS is enabled outside Development. Kestrel does not send a `Server` header.
+- Request bodies are capped by `RequestLimits:MaxRequestBodyBytes` (default 25 MB); larger requests get 413 `PAYLOAD_TOO_LARGE`.
+- A global rate limit (`RateLimiting:Global`, default 300 requests/minute per user, or per IP when anonymous) applies to everything except `/health`, on top of the stricter per-endpoint policies.
+- `GET /api/v1/auth/me` returns 401 `ACCOUNT_DISABLED` as soon as the account is disabled, even with a still-valid access token.
 
 ## Authorization
 

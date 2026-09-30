@@ -3,6 +3,7 @@ using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Exceptions;
 using CustomerSupportCrm.Application.Features.Authentication.Common;
 using CustomerSupportCrm.Contracts.Authentication;
+using CustomerSupportCrm.Domain.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +19,16 @@ internal sealed class GetCurrentUserHandler(IApplicationDbContext db, ICurrentUs
         var user = await db.Users
             .AsNoTracking()
             .Where(u => u.Id == userId)
-            .Select(u => new { u.Email, u.DisplayName })
+            .Select(u => new { u.Email, u.DisplayName, u.Status })
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new UnauthorizedException();
+
+        // The access token outlives a disable by up to its lifetime; /me is what clients use to
+        // restore a session, so refuse it as soon as the account is disabled.
+        if (user.Status != UserStatus.Active)
+        {
+            throw new UnauthorizedException(AuthenticationErrors.AccountDisabled, "The account is disabled.");
+        }
 
         var profile = await UserAccessProfile.LoadAsync(db, userId, cancellationToken);
         return new CurrentUserResponse(userId.Value, user.Email, user.DisplayName, profile.Roles, profile.Permissions);

@@ -17,8 +17,9 @@ builder.Services
     .AddApiLogging()
     .AddApiLocalization()
     .AddApiOpenApi()
-    .AddApiCors()
+    .AddApiCors(builder.Environment)
     .AddApiRateLimiting()
+    .AddApiRequestLimits()
     .AddExceptionHandler<GlobalExceptionHandler>()
     .ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()))
     .AddApplication()
@@ -51,7 +52,13 @@ if (app.Environment.IsDevelopment())
     app.MapApiOpenApi();
 }
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
+app.UseMiddleware<SecureHeadersMiddleware>();
 
 app.UseCors();
 app.UseAuthentication();
