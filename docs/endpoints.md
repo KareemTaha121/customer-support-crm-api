@@ -152,6 +152,7 @@ Route groups (`src/CustomerSupportCrm.Api/Endpoints/EndpointExtensions.cs`):
 | GET | `/channels/status`, `/channels/outbox` | `channels.manage` |
 | POST | `/channels/test`, `/channels/outbox/{id}/retry` | `channels.manage` |
 | GET | `/chat/conversations` | `chat.handle` |
+| GET | `/chat/conversations/{id}/messages` | `chat.handle` (public transcript of the linked ticket, staff scope) |
 | POST | `/chat/conversations/{id}/accept`, `/messages`, `/close` | `chat.handle` |
 
 ### AI (`Features/Ai`) — all require `ai.use`; ticket actions also need the `ai.agent_assist_enabled` setting
@@ -204,6 +205,7 @@ Route groups (`src/CustomerSupportCrm.Api/Endpoints/EndpointExtensions.cs`):
 | POST | `/chat/conversations` | `chat.enabled` |
 | GET | `/chat/conversations/{id}` | per-conversation token |
 | POST | `/chat/conversations/{id}/messages`, `/close` | per-conversation token |
+| GET | `/web-forms/categories` | — (active ticket categories for the contact form) |
 | POST | `/web-forms/tickets` | `webform.enabled` |
 | POST | `/chatbot/messages` | `chatbot.enabled` |
 | GET, POST | `/channels/{channel}/webhook` | Provider webhooks (email, SMS, WhatsApp), signature-checked |

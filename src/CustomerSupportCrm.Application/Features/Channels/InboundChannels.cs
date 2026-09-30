@@ -5,6 +5,7 @@ using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Exceptions;
 using CustomerSupportCrm.Application.Features.Tickets;
 using CustomerSupportCrm.Contracts.Common;
+using CustomerSupportCrm.Contracts.Portal;
 using CustomerSupportCrm.Domain.Customers;
 using CustomerSupportCrm.Domain.Shared;
 using CustomerSupportCrm.Domain.Tickets;
@@ -262,11 +263,22 @@ internal sealed class SubmitWebFormHandler(IApplicationDbContext db, CustomerRes
 
 internal sealed class WebFormEndpoints : IPublicEndpoint
 {
-    public void MapEndpoint(IEndpointRouteBuilder app) =>
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
         app.MapPost("/web-forms/tickets", async (WebFormTicketRequest request, ISender sender, CancellationToken ct) =>
                 ApiResults.Created("/api/v1/public/web-forms/tickets", await sender.Send(new SubmitWebFormCommand(request), ct)))
             .RequireRateLimiting(RateLimitPolicies.Public)
             .WithTags("Channels")
             .WithName("SubmitWebForm")
             .Produces<ApiResponse<WebFormTicketResponse>>(StatusCodes.Status201Created);
+
+        // Active ticket categories for the anonymous contact form (same list as GET /portal/categories).
+        app.MapGet("/web-forms/categories", async (IApplicationDbContext db, CancellationToken ct) =>
+                ApiResults.Ok(await db.TicketCategories.AsNoTracking().Where(c => c.IsActive).OrderBy(c => c.SortOrder).ThenBy(c => c.Name)
+                    .Select(c => new PortalCategoryResponse(c.Id, c.Name, c.NameAr)).ToListAsync(ct)))
+            .RequireRateLimiting(RateLimitPolicies.Public)
+            .WithTags("Channels")
+            .WithName("ListWebFormCategories")
+            .Produces<ApiResponse<List<PortalCategoryResponse>>>();
+    }
 }
