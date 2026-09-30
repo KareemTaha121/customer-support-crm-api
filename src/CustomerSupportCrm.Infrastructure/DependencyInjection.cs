@@ -61,6 +61,7 @@ public static class DependencyInjection
                 .AddInterceptors(serviceProvider.GetRequiredService<AuditableEntityInterceptor>());
         });
         services.AddScoped<IApplicationDbContext>(serviceProvider => serviceProvider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<ISequenceGenerator, PostgresSequenceGenerator>();
 
         services.AddOptions<BootstrapOptions>().BindConfiguration(BootstrapOptions.SectionName);
         services.AddScoped<DatabaseInitializer>();

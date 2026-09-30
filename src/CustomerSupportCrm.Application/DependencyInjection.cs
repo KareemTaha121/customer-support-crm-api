@@ -2,7 +2,9 @@ using System.Reflection;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Behaviors;
 using CustomerSupportCrm.Application.Common.Authorization;
+using CustomerSupportCrm.Application.Features.Attachments;
 using CustomerSupportCrm.Application.Features.Authentication.Common;
+using CustomerSupportCrm.Application.Features.Customers.Common;
 using CustomerSupportCrm.Application.Features.Notifications;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +30,8 @@ public static class DependencyInjection
         services.AddScoped<UserSessionService>();
         services.AddScoped<IAccessScopeProvider, AccessScopeProvider>();
         services.AddScoped<NotificationSender>();
+        services.AddScoped<AttachmentService>();
+        services.AddScoped<CustomerTimeline>();
 
         return services;
     }
