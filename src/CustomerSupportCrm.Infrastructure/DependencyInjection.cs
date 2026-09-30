@@ -1,16 +1,19 @@
 using CustomerSupportCrm.Application.Abstractions.Auditing;
 using CustomerSupportCrm.Application.Abstractions.Authentication;
+using CustomerSupportCrm.Application.Abstractions.Channels;
 using CustomerSupportCrm.Application.Abstractions.Files;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Notifications;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Abstractions.Search;
+using CustomerSupportCrm.Application.Features.Channels;
 using CustomerSupportCrm.Application.Features.Dashboard;
 using CustomerSupportCrm.Application.Features.Sla;
 using CustomerSupportCrm.Infrastructure.Auditing;
 using CustomerSupportCrm.Infrastructure.Authentication;
 using CustomerSupportCrm.Infrastructure.Authorization;
 using CustomerSupportCrm.Infrastructure.BackgroundJobs;
+using CustomerSupportCrm.Infrastructure.Channels;
 using CustomerSupportCrm.Infrastructure.Files;
 using CustomerSupportCrm.Infrastructure.Persistence;
 using CustomerSupportCrm.Infrastructure.Persistence.Interceptors;
@@ -41,6 +44,7 @@ public static class DependencyInjection
         services.AddPersistence();
         services.AddIdentityServices();
         services.AddPlatformServices();
+        services.AddChannels();
 
         return services;
     }
@@ -87,6 +91,24 @@ public static class DependencyInjection
         services.AddOptions<BackgroundJobOptions>().BindConfiguration(BackgroundJobOptions.SectionName);
         services.AddRecurringRequest<EvaluateSlaCommand>(TimeSpan.FromMinutes(1));
         services.AddRecurringRequest<SendTaskRemindersCommand>(TimeSpan.FromMinutes(1));
+    }
+
+    private static void AddChannels(this IServiceCollection services)
+    {
+        services.AddOptions<EmailOptions>().BindConfiguration(EmailOptions.SectionName);
+        services.AddOptions<WhatsAppOptions>().BindConfiguration(WhatsAppOptions.SectionName);
+        services.AddOptions<SmsOptions>().BindConfiguration(SmsOptions.SectionName);
+        services.AddOptions<CustomerPortalOptions>().BindConfiguration(CustomerPortalOptions.SectionName);
+
+        services.AddSingleton<IMessageSender, SmtpEmailSender>();
+        services.AddHttpClient<IMessageSender, WhatsAppSender>(client => client.Timeout = TimeSpan.FromSeconds(20));
+        services.AddHttpClient<IMessageSender, TwilioSmsSender>(client => client.Timeout = TimeSpan.FromSeconds(20));
+
+        services.AddSingleton<IChannelWebhookAdapter, EmailWebhookAdapter>();
+        services.AddSingleton<IChannelWebhookAdapter, WhatsAppWebhookAdapter>();
+        services.AddSingleton<IChannelWebhookAdapter, SmsWebhookAdapter>();
+
+        services.AddRecurringRequest<DispatchOutboxCommand>(TimeSpan.FromSeconds(15));
     }
 
     private static void AddIdentityServices(this IServiceCollection services)

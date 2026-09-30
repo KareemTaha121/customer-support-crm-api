@@ -1,9 +1,11 @@
 using System.Reflection;
 using CustomerSupportCrm.Application.Abstractions.Http;
+using CustomerSupportCrm.Application.Abstractions.Notifications;
 using CustomerSupportCrm.Application.Behaviors;
 using CustomerSupportCrm.Application.Common.Authorization;
 using CustomerSupportCrm.Application.Features.Attachments;
 using CustomerSupportCrm.Application.Features.Authentication.Common;
+using CustomerSupportCrm.Application.Features.Channels;
 using CustomerSupportCrm.Application.Features.Customers.Common;
 using CustomerSupportCrm.Application.Features.Notifications;
 using CustomerSupportCrm.Application.Features.Sla;
@@ -40,6 +42,9 @@ public static class DependencyInjection
         services.AddScoped<SlaCalculator>();
         services.AddScoped<AssignmentEngine>();
         services.AddScoped<EscalationExecutor>();
+        services.AddScoped<CustomerMessenger>();
+        services.AddScoped<CustomerResolver>();
+        services.AddScoped<IChatAccessValidator, ChatAccessValidator>();
 
         return services;
     }

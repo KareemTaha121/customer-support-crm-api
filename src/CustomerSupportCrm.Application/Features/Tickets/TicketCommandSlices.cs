@@ -108,10 +108,12 @@ public sealed class TicketFactory(IApplicationDbContext db, ISequenceGenerator s
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var customer = await db.Customers.AsNoTracking()
-            .Where(c => c.Id == request.CustomerId)
-            .Select(c => new { c.BranchId, c.DepartmentId, c.PrimaryEmail, c.PrimaryPhone })
-            .SingleOrDefaultAsync(cancellationToken)
+        // Customers created earlier in this unit of work (inbound channels) are not in the database yet.
+        var customer = db.Customers.Local.Where(c => c.Id == request.CustomerId).Select(c => new CustomerDefaults(c.BranchId, c.DepartmentId, c.PrimaryEmail)).FirstOrDefault()
+            ?? await db.Customers.AsNoTracking()
+                .Where(c => c.Id == request.CustomerId)
+                .Select(c => new CustomerDefaults(c.BranchId, c.DepartmentId, c.PrimaryEmail))
+                .SingleOrDefaultAsync(cancellationToken)
             ?? throw CustomerQueries.NotFound();
 
         var priority = request.Priority;
@@ -156,6 +158,8 @@ public sealed class TicketFactory(IApplicationDbContext db, ISequenceGenerator s
         db.Tickets.Add(ticket);
         return ticket;
     }
+
+    private sealed record CustomerDefaults(Guid BranchId, Guid? DepartmentId, string? PrimaryEmail);
 }
 
 // ---------- Update ----------
