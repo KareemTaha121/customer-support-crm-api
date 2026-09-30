@@ -26,7 +26,7 @@ internal sealed partial class GlobalExceptionHandler(ILogger<GlobalExceptionHand
         var (statusCode, category, errors) = exception switch
         {
             ValidationException validation =>
-                (StatusCodes.Status400BadRequest, ErrorCodes.ValidationError, validation.Errors.Select(ToApiError).ToList()),
+                (StatusCodes.Status400BadRequest, ErrorCodes.ValidationError, validation.Errors.Select(failure => ToApiError(httpContext, failure)).ToList()),
             AppException app =>
                 (StatusFor(app), ErrorResponseWriter.CategoryFor(StatusFor(app)), Single(httpContext, app.Code, app.Message)),
             DomainException domain =>
@@ -67,8 +67,20 @@ internal sealed partial class GlobalExceptionHandler(ILogger<GlobalExceptionHand
         _ => StatusCodes.Status400BadRequest,
     };
 
-    private static ApiError ToApiError(ValidationFailure failure) =>
-        new(ToValidationCode(failure.ErrorCode), failure.ErrorMessage, ToFieldPath(failure.PropertyName));
+    private static ApiError ToApiError(HttpContext context, ValidationFailure failure)
+    {
+        var code = ToValidationCode(failure.ErrorCode);
+        // Feature codes (UNKNOWN_SETTING, INVALID_VERIFICATION_CODE, ...) have resx messages; generic field
+        // codes keep the validator's own message, which names the field and limit.
+        var message = GenericFieldCodes.Contains(code) ? failure.ErrorMessage : ErrorResponseWriter.Localize(context, code, failure.ErrorMessage);
+        return new ApiError(code, message, ToFieldPath(failure.PropertyName));
+    }
+
+    private static readonly HashSet<string> GenericFieldCodes =
+    [
+        ErrorCodes.Required, ErrorCodes.InvalidLength, ErrorCodes.InvalidEmail, ErrorCodes.InvalidFormat,
+        ErrorCodes.OutOfRange, ErrorCodes.InvalidValue, ErrorCodes.Invalid,
+    ];
 
     private static string ToValidationCode(string? fluentValidationCode) => fluentValidationCode switch
     {

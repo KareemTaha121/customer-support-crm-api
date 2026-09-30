@@ -108,4 +108,211 @@
   <data name="INVALID_ROLE_NAME" xml:space="preserve">
     <value>اسم الدور غير صالح.</value>
   </data>
+  <data name="SERVICE_UNAVAILABLE" xml:space="preserve">
+    <value>الخدمة غير متاحة مؤقتاً.</value>
+  </data>
+  <data name="FEATURE_DISABLED" xml:space="preserve">
+    <value>هذه الميزة معطّلة حالياً.</value>
+  </data>
+  <data name="OUT_OF_SCOPE" xml:space="preserve">
+    <value>ليست لديك صلاحية الوصول إلى هذا الفرع أو القسم.</value>
+  </data>
+  <data name="ORGANIZATION_NOT_CONFIGURED" xml:space="preserve">
+    <value>لم يتم إعداد المؤسسة بعد.</value>
+  </data>
+  <data name="ORGANIZATION_UNIT_INACTIVE" xml:space="preserve">
+    <value>الفرع أو القسم غير نشط.</value>
+  </data>
+  <data name="INVALID_ORGANIZATION" xml:space="preserve">
+    <value>بيانات المؤسسة غير صالحة.</value>
+  </data>
+  <data name="BRANCH_NOT_FOUND" xml:space="preserve">
+    <value>الفرع غير موجود أو غير نشط.</value>
+  </data>
+  <data name="BRANCH_CODE_TAKEN" xml:space="preserve">
+    <value>يوجد فرع آخر بنفس الرمز.</value>
+  </data>
+  <data name="INVALID_BRANCH" xml:space="preserve">
+    <value>رمز الفرع أو اسمه غير صالح.</value>
+  </data>
+  <data name="DEPARTMENT_NOT_FOUND" xml:space="preserve">
+    <value>القسم غير موجود أو غير نشط.</value>
+  </data>
+  <data name="DEPARTMENT_CODE_TAKEN" xml:space="preserve">
+    <value>يوجد قسم آخر بنفس الرمز في هذا الفرع.</value>
+  </data>
+  <data name="DEPARTMENT_NOT_IN_BRANCH" xml:space="preserve">
+    <value>فرع أو قسم واحد أو أكثر غير صالح.</value>
+  </data>
+  <data name="INVALID_DEPARTMENT" xml:space="preserve">
+    <value>رمز القسم أو اسمه غير صالح.</value>
+  </data>
+  <data name="UNKNOWN_SETTING" xml:space="preserve">
+    <value>الإعداد غير معروف.</value>
+  </data>
+  <data name="CUSTOMER_NOT_FOUND" xml:space="preserve">
+    <value>العميل غير موجود.</value>
+  </data>
+  <data name="CUSTOMER_HAS_OPEN_TICKETS" xml:space="preserve">
+    <value>قم بحل تذاكر العميل النشطة أو إغلاقها أولاً.</value>
+  </data>
+  <data name="DUPLICATE_CUSTOMER" xml:space="preserve">
+    <value>يوجد عميل آخر بنفس بيانات التواصل.</value>
+  </data>
+  <data name="INVALID_CUSTOMER" xml:space="preserve">
+    <value>بيانات العميل غير صالحة.</value>
+  </data>
+  <data name="CONTACT_NOT_FOUND" xml:space="preserve">
+    <value>بيانات التواصل غير موجودة.</value>
+  </data>
+  <data name="DUPLICATE_CONTACT" xml:space="preserve">
+    <value>بيانات التواصل هذه مضافة للعميل بالفعل.</value>
+  </data>
+  <data name="INVALID_PHONE_NUMBER" xml:space="preserve">
+    <value>يجب أن يكون رقم الهاتف بالصيغة الدولية، مثل ‎+966501234567.</value>
+  </data>
+  <data name="NOTE_NOT_FOUND" xml:space="preserve">
+    <value>الملاحظة غير موجودة.</value>
+  </data>
+  <data name="NOTE_EDIT_FORBIDDEN" xml:space="preserve">
+    <value>لا يمكن تعديل هذه الملاحظة أو حذفها إلا بواسطة كاتبها.</value>
+  </data>
+  <data name="INVALID_NOTE" xml:space="preserve">
+    <value>الملاحظة فارغة أو طويلة جداً.</value>
+  </data>
+  <data name="ATTACHMENT_NOT_FOUND" xml:space="preserve">
+    <value>المرفق غير موجود.</value>
+  </data>
+  <data name="FILE_EMPTY" xml:space="preserve">
+    <value>الملف فارغ.</value>
+  </data>
+  <data name="FILE_TOO_LARGE" xml:space="preserve">
+    <value>حجم الملف يتجاوز الحد المسموح.</value>
+  </data>
+  <data name="FILE_TYPE_NOT_ALLOWED" xml:space="preserve">
+    <value>نوع الملف غير مسموح به.</value>
+  </data>
+  <data name="FILE_SIGNATURE_MISMATCH" xml:space="preserve">
+    <value>محتوى الملف لا يطابق امتداده.</value>
+  </data>
+  <data name="TICKET_NOT_FOUND" xml:space="preserve">
+    <value>التذكرة غير موجودة.</value>
+  </data>
+  <data name="TICKET_CLOSED" xml:space="preserve">
+    <value>هذه التذكرة مغلقة. أعد فتحها أو أنشئ طلباً جديداً.</value>
+  </data>
+  <data name="INVALID_TICKET" xml:space="preserve">
+    <value>بيانات التذكرة غير صالحة.</value>
+  </data>
+  <data name="INVALID_STATUS_TRANSITION" xml:space="preserve">
+    <value>لا يمكن نقل التذكرة إلى هذه الحالة.</value>
+  </data>
+  <data name="INVALID_MESSAGE" xml:space="preserve">
+    <value>الرسالة فارغة أو طويلة جداً أو غير مسموح بها.</value>
+  </data>
+  <data name="INVALID_CATEGORY" xml:space="preserve">
+    <value>بيانات التصنيف غير صالحة.</value>
+  </data>
+  <data name="CATEGORY_NOT_FOUND" xml:space="preserve">
+    <value>التصنيف غير موجود.</value>
+  </data>
+  <data name="CATEGORY_IN_USE" xml:space="preserve">
+    <value>انقل التصنيفات الفرعية أو احذفها أولاً.</value>
+  </data>
+  <data name="ASSIGN_FORBIDDEN" xml:space="preserve">
+    <value>يمكنك إسناد التذاكر إلى نفسك فقط.</value>
+  </data>
+  <data name="AGENT_NOT_ELIGIBLE" xml:space="preserve">
+    <value>هذا الموظف غير نشط أو ليست لديه صلاحية على فرع التذكرة أو قسمها.</value>
+  </data>
+  <data name="FEEDBACK_NOT_ALLOWED" xml:space="preserve">
+    <value>يمكن إرسال التقييم بعد حل الطلب.</value>
+  </data>
+  <data name="CHAT_NOT_FOUND" xml:space="preserve">
+    <value>المحادثة غير موجودة.</value>
+  </data>
+  <data name="TASK_NOT_FOUND" xml:space="preserve">
+    <value>المهمة غير موجودة.</value>
+  </data>
+  <data name="INVALID_TASK" xml:space="preserve">
+    <value>بيانات المهمة غير صالحة.</value>
+  </data>
+  <data name="QUICK_REPLY_NOT_FOUND" xml:space="preserve">
+    <value>الرد السريع غير موجود.</value>
+  </data>
+  <data name="INVALID_QUICK_REPLY" xml:space="preserve">
+    <value>بيانات الرد السريع غير صالحة.</value>
+  </data>
+  <data name="SLA_POLICY_NOT_FOUND" xml:space="preserve">
+    <value>سياسة اتفاقية مستوى الخدمة غير موجودة.</value>
+  </data>
+  <data name="INVALID_SLA_POLICY" xml:space="preserve">
+    <value>بيانات سياسة اتفاقية مستوى الخدمة غير صالحة.</value>
+  </data>
+  <data name="RULE_NOT_FOUND" xml:space="preserve">
+    <value>القاعدة غير موجودة.</value>
+  </data>
+  <data name="INVALID_ASSIGNMENT_RULE" xml:space="preserve">
+    <value>بيانات قاعدة الإسناد غير صالحة.</value>
+  </data>
+  <data name="INVALID_ESCALATION_RULE" xml:space="preserve">
+    <value>بيانات قاعدة التصعيد غير صالحة.</value>
+  </data>
+  <data name="ARTICLE_NOT_FOUND" xml:space="preserve">
+    <value>المقال غير موجود.</value>
+  </data>
+  <data name="ARTICLE_SLUG_TAKEN" xml:space="preserve">
+    <value>يوجد مقال آخر يستخدم نفس الرابط المختصر.</value>
+  </data>
+  <data name="INVALID_ARTICLE" xml:space="preserve">
+    <value>بيانات المقال غير صالحة.</value>
+  </data>
+  <data name="INVALID_ARTICLE_STATE" xml:space="preserve">
+    <value>لا يمكن تنفيذ هذا الإجراء في حالة المقال الحالية.</value>
+  </data>
+  <data name="KB_CATEGORY_NOT_FOUND" xml:space="preserve">
+    <value>التصنيف غير موجود.</value>
+  </data>
+  <data name="KB_CATEGORY_IN_USE" xml:space="preserve">
+    <value>انقل التصنيفات الفرعية أو احذفها أولاً.</value>
+  </data>
+  <data name="INVALID_KB_CATEGORY" xml:space="preserve">
+    <value>بيانات تصنيف قاعدة المعرفة غير صالحة.</value>
+  </data>
+  <data name="AI_NOT_CONFIGURED" xml:space="preserve">
+    <value>ميزات الذكاء الاصطناعي غير مُعدّة.</value>
+  </data>
+  <data name="AI_REFUSED" xml:space="preserve">
+    <value>رفض المساعد الذكي هذا الطلب.</value>
+  </data>
+  <data name="AI_INVALID_OUTPUT" xml:space="preserve">
+    <value>أعاد المساعد الذكي إجابة غير صالحة للاستخدام. حاول مرة أخرى.</value>
+  </data>
+  <data name="AI_SUGGESTION_NOT_FOUND" xml:space="preserve">
+    <value>الاقتراح غير موجود.</value>
+  </data>
+  <data name="EMAIL_NOT_VERIFIED" xml:space="preserve">
+    <value>يرجى تأكيد بريدك الإلكتروني أولاً.</value>
+  </data>
+  <data name="PORTAL_ACCOUNT_EXISTS" xml:space="preserve">
+    <value>يوجد حساب في البوابة بنفس البريد الإلكتروني.</value>
+  </data>
+  <data name="INVALID_VERIFICATION_CODE" xml:space="preserve">
+    <value>رمز التحقق غير صحيح أو منتهي الصلاحية.</value>
+  </data>
+  <data name="INVALID_ACCOUNT" xml:space="preserve">
+    <value>بيانات الحساب غير صالحة.</value>
+  </data>
+  <data name="API_KEY_NOT_FOUND" xml:space="preserve">
+    <value>مفتاح الواجهة البرمجية غير موجود.</value>
+  </data>
+  <data name="INVALID_API_KEY" xml:space="preserve">
+    <value>بيانات مفتاح الواجهة البرمجية غير صالحة.</value>
+  </data>
+  <data name="WEBHOOK_NOT_FOUND" xml:space="preserve">
+    <value>الـ Webhook غير موجود.</value>
+  </data>
+  <data name="INVALID_WEBHOOK" xml:space="preserve">
+    <value>بيانات الـ Webhook غير صالحة.</value>
+  </data>
 </root>

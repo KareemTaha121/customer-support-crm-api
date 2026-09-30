@@ -108,4 +108,130 @@
   <data name="INVALID_ROLE_NAME" xml:space="preserve">
     <value>The role name is not valid.</value>
   </data>
+  <data name="SERVICE_UNAVAILABLE" xml:space="preserve">
+    <value>The service is temporarily unavailable.</value>
+  </data>
+  <data name="FEATURE_DISABLED" xml:space="preserve">
+    <value>This feature is currently disabled.</value>
+  </data>
+  <data name="OUT_OF_SCOPE" xml:space="preserve">
+    <value>You do not have access to this branch or department.</value>
+  </data>
+  <data name="ORGANIZATION_NOT_CONFIGURED" xml:space="preserve">
+    <value>The organization has not been configured.</value>
+  </data>
+  <data name="BRANCH_CODE_TAKEN" xml:space="preserve">
+    <value>A branch with this code already exists.</value>
+  </data>
+  <data name="INVALID_BRANCH" xml:space="preserve">
+    <value>The branch code or name is not valid.</value>
+  </data>
+  <data name="DEPARTMENT_CODE_TAKEN" xml:space="preserve">
+    <value>A department with this code already exists in the branch.</value>
+  </data>
+  <data name="DEPARTMENT_NOT_IN_BRANCH" xml:space="preserve">
+    <value>One or more branches or departments are invalid.</value>
+  </data>
+  <data name="INVALID_DEPARTMENT" xml:space="preserve">
+    <value>The department code or name is not valid.</value>
+  </data>
+  <data name="CUSTOMER_NOT_FOUND" xml:space="preserve">
+    <value>The customer was not found.</value>
+  </data>
+  <data name="CUSTOMER_HAS_OPEN_TICKETS" xml:space="preserve">
+    <value>Resolve or close the customer's active tickets first.</value>
+  </data>
+  <data name="CONTACT_NOT_FOUND" xml:space="preserve">
+    <value>The contact was not found.</value>
+  </data>
+  <data name="DUPLICATE_CONTACT" xml:space="preserve">
+    <value>This contact already exists on the customer.</value>
+  </data>
+  <data name="INVALID_PHONE_NUMBER" xml:space="preserve">
+    <value>The phone number must be in international format, e.g. +966501234567.</value>
+  </data>
+  <data name="NOTE_NOT_FOUND" xml:space="preserve">
+    <value>The note was not found.</value>
+  </data>
+  <data name="INVALID_NOTE" xml:space="preserve">
+    <value>The note is empty or too long.</value>
+  </data>
+  <data name="FILE_EMPTY" xml:space="preserve">
+    <value>The file is empty.</value>
+  </data>
+  <data name="FILE_TYPE_NOT_ALLOWED" xml:space="preserve">
+    <value>This file type is not allowed.</value>
+  </data>
+  <data name="FILE_SIGNATURE_MISMATCH" xml:space="preserve">
+    <value>The file content does not match its extension.</value>
+  </data>
+  <data name="TICKET_NOT_FOUND" xml:space="preserve">
+    <value>The ticket was not found.</value>
+  </data>
+  <data name="CATEGORY_IN_USE" xml:space="preserve">
+    <value>Move or delete the sub-categories first.</value>
+  </data>
+  <data name="ASSIGN_FORBIDDEN" xml:space="preserve">
+    <value>You can only assign tickets to yourself.</value>
+  </data>
+  <data name="AGENT_NOT_ELIGIBLE" xml:space="preserve">
+    <value>This agent is inactive or has no access to the ticket's branch/department.</value>
+  </data>
+  <data name="FEEDBACK_NOT_ALLOWED" xml:space="preserve">
+    <value>Feedback can be given once the request is resolved.</value>
+  </data>
+  <data name="CHAT_NOT_FOUND" xml:space="preserve">
+    <value>The conversation was not found.</value>
+  </data>
+  <data name="TASK_NOT_FOUND" xml:space="preserve">
+    <value>The task was not found.</value>
+  </data>
+  <data name="QUICK_REPLY_NOT_FOUND" xml:space="preserve">
+    <value>The quick reply was not found.</value>
+  </data>
+  <data name="SLA_POLICY_NOT_FOUND" xml:space="preserve">
+    <value>The SLA policy was not found.</value>
+  </data>
+  <data name="RULE_NOT_FOUND" xml:space="preserve">
+    <value>The rule was not found.</value>
+  </data>
+  <data name="ARTICLE_NOT_FOUND" xml:space="preserve">
+    <value>The article was not found.</value>
+  </data>
+  <data name="ARTICLE_SLUG_TAKEN" xml:space="preserve">
+    <value>Another article already uses this URL slug.</value>
+  </data>
+  <data name="KB_CATEGORY_NOT_FOUND" xml:space="preserve">
+    <value>The category was not found.</value>
+  </data>
+  <data name="KB_CATEGORY_IN_USE" xml:space="preserve">
+    <value>Move or delete the sub-categories first.</value>
+  </data>
+  <data name="AI_NOT_CONFIGURED" xml:space="preserve">
+    <value>AI features are not configured.</value>
+  </data>
+  <data name="AI_REFUSED" xml:space="preserve">
+    <value>The AI assistant declined this request.</value>
+  </data>
+  <data name="AI_INVALID_OUTPUT" xml:space="preserve">
+    <value>The AI assistant returned an unusable answer. Try again.</value>
+  </data>
+  <data name="AI_SUGGESTION_NOT_FOUND" xml:space="preserve">
+    <value>The suggestion was not found.</value>
+  </data>
+  <data name="EMAIL_NOT_VERIFIED" xml:space="preserve">
+    <value>Please verify your email address first.</value>
+  </data>
+  <data name="PORTAL_ACCOUNT_EXISTS" xml:space="preserve">
+    <value>A portal account with this email already exists.</value>
+  </data>
+  <data name="INVALID_VERIFICATION_CODE" xml:space="preserve">
+    <value>The verification code is invalid or has expired.</value>
+  </data>
+  <data name="API_KEY_NOT_FOUND" xml:space="preserve">
+    <value>The API key was not found.</value>
+  </data>
+  <data name="WEBHOOK_NOT_FOUND" xml:space="preserve">
+    <value>The webhook was not found.</value>
+  </data>
 </root>
