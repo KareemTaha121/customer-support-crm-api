@@ -80,6 +80,27 @@ public sealed class CustomerAccount : Entity<Guid>, IAuditableEntity
         return account;
     }
 
+    /// <summary>Unverified accounts only: new code (and optionally new credentials).</summary>
+    public void RestartVerification(string verificationCodeHash, DateTimeOffset now, string? passwordHash = null, string? displayName = null)
+    {
+        if (EmailVerified)
+        {
+            throw new DomainException(InvalidCode, "The account is already verified.");
+        }
+
+        VerificationCodeHash = verificationCodeHash;
+        VerificationExpiresAt = now + VerificationLifetime;
+        if (passwordHash is not null)
+        {
+            PasswordHash = passwordHash;
+        }
+
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            DisplayName = displayName.Trim();
+        }
+    }
+
     public static string GenerateVerificationCode() => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6", System.Globalization.CultureInfo.InvariantCulture);
 
     public bool Verify(string codeHash, DateTimeOffset now)
