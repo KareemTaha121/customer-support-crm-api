@@ -24,9 +24,10 @@ Dependency direction: `Api → Application → Domain`, `Infrastructure → Appl
 
 ```bash
 docker compose up -d        # PostgreSQL
+dotnet tool restore
 dotnet build
 dotnet test
-dotnet run --project src/CustomerSupportCrm.Api
+dotnet run --project src/CustomerSupportCrm.Api --launch-profile https   # Swagger UI: https://localhost:5001/swagger
 ```
 
 ## Conventions

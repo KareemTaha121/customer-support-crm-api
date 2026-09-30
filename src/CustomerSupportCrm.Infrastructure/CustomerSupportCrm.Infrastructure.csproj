@@ -5,6 +5,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../CustomerSupportCrm.Application/CustomerSupportCrm.Application.csproj" />
     <ProjectReference Include="../CustomerSupportCrm.Domain/CustomerSupportCrm.Domain.csproj" />
   </ItemGroup>

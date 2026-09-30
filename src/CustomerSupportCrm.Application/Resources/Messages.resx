@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BAD_REQUEST" xml:space="preserve">
+    <value>The request is invalid.</value>
+  </data>
+  <data name="VALIDATION_ERROR" xml:space="preserve">
+    <value>Validation failed.</value>
+  </data>
+  <data name="UNAUTHORIZED" xml:space="preserve">
+    <value>Authentication is required.</value>
+  </data>
+  <data name="FORBIDDEN" xml:space="preserve">
+    <value>You do not have permission to perform this action.</value>
+  </data>
+  <data name="NOT_FOUND" xml:space="preserve">
+    <value>The requested resource was not found.</value>
+  </data>
+  <data name="METHOD_NOT_ALLOWED" xml:space="preserve">
+    <value>The HTTP method is not allowed for this resource.</value>
+  </data>
+  <data name="CONFLICT" xml:space="preserve">
+    <value>The request conflicts with the current state of the resource.</value>
+  </data>
+  <data name="PAYLOAD_TOO_LARGE" xml:space="preserve">
+    <value>The request payload is too large.</value>
+  </data>
+  <data name="UNSUPPORTED_MEDIA_TYPE" xml:space="preserve">
+    <value>The request content type is not supported.</value>
+  </data>
+  <data name="BUSINESS_RULE_VIOLATION" xml:space="preserve">
+    <value>The request violates a business rule.</value>
+  </data>
+  <data name="RATE_LIMITED" xml:space="preserve">
+    <value>Too many requests. Please try again later.</value>
+  </data>
+  <data name="INTERNAL_ERROR" xml:space="preserve">
+    <value>An unexpected error occurred.</value>
+  </data>
+</root>
