@@ -45,7 +45,7 @@ internal sealed class PostgresKnowledgeSearch(SqlRunner sql) : IKnowledgeSearch
         }
 
         // Terms are letters/digits only, so they cannot inject tsquery operators.
-        var tsQuery = string.Join(" & ", terms.Select(t => t + ":*"));
+        var tsQuery = string.Join(request.MatchAny ? " | " : " & ", terms.Select(t => t + ":*"));
 
         return await sql.QueryAsync(
             Query,

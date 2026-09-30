@@ -254,7 +254,7 @@ internal static class KnowledgeContext
 
     public static async Task<Loaded> LoadAsync(IApplicationDbContext db, IKnowledgeSearch search, string query, bool publicOnly, CancellationToken cancellationToken, string? language = null, int limit = 5)
     {
-        var ids = await search.SearchAsync(new KnowledgeSearchRequest(query, language, publicOnly, PublishedOnly: true, limit), cancellationToken);
+        var ids = await search.SearchAsync(new KnowledgeSearchRequest(query, language, publicOnly, PublishedOnly: true, limit, MatchAny: true), cancellationToken);
         var rows = await db.KnowledgeArticles.AsNoTracking()
             .Where(a => ids.Contains(a.Id) && a.Status == ArticleStatus.Published)
             .Select(a => new { a.Id, a.Title, a.Slug, a.Summary, a.Body })

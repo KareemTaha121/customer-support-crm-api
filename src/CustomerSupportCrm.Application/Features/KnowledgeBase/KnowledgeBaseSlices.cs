@@ -334,7 +334,7 @@ internal sealed class SuggestArticlesHandler(IApplicationDbContext db, IAccessSc
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(Tickets.Common.TicketErrors.TicketNotFound, "The ticket was not found.");
 
-        var ids = await search.SearchAsync(new KnowledgeSearchRequest(ticket.Subject, null, false, true, Math.Clamp(request.Limit, 1, 20)), cancellationToken);
+        var ids = await search.SearchAsync(new KnowledgeSearchRequest(ticket.Subject, null, false, true, Math.Clamp(request.Limit, 1, 20), MatchAny: true), cancellationToken);
         var items = await KnowledgeQueries.ProjectList(db.KnowledgeArticles.AsNoTracking().Where(a => ids.Contains(a.Id)), db).ToListAsync(cancellationToken);
         return [.. items.OrderBy(a => ids.ToList().IndexOf(a.Id))];
     }
