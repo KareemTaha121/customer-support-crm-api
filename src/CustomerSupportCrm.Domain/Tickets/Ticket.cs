@@ -126,6 +126,9 @@ public sealed class Ticket : AggregateRoot<Guid>, IAuditableEntity, ISoftDeletab
 
     public bool IsActive => Status.IsActive();
 
+    /// <summary>Statuses reachable with <see cref="ChangeStatus"/> from <paramref name="status"/>.</summary>
+    public static IReadOnlyList<TicketStatus> AllowedTransitions(TicketStatus status) => Transitions[status];
+
     public static string FormatNumber(long sequence) => $"T-{sequence:D6}";
 
     public static Ticket Create(

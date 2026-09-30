@@ -90,4 +90,11 @@ public sealed class Attachment : Entity<Guid>
             CreatedAt = now,
         };
     }
+
+    /// <summary>Links a pre-uploaded file to the message it was sent with.</summary>
+    public void AttachTo(Guid parentId, bool isPublic)
+    {
+        ParentId = parentId;
+        IsPublic = isPublic;
+    }
 }
