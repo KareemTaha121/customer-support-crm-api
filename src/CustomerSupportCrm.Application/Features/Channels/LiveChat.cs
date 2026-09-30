@@ -286,6 +286,29 @@ internal sealed class AcceptChatHandler(IApplicationDbContext db, IAccessScopePr
     }
 }
 
+/// <summary>
+/// Staff transcript of one conversation (public messages of the linked ticket). Needs only
+/// <c>chat.handle</c> plus access to the ticket's branch/department, not <c>tickets.view</c>.
+/// </summary>
+public sealed record GetAgentChatMessagesQuery(Guid ConversationId) : IRequest<IReadOnlyList<TicketMessageResponse>>;
+
+internal sealed class GetAgentChatMessagesHandler(IApplicationDbContext db, IAccessScopeProvider scopes)
+    : IRequestHandler<GetAgentChatMessagesQuery, IReadOnlyList<TicketMessageResponse>>
+{
+    public async Task<IReadOnlyList<TicketMessageResponse>> Handle(GetAgentChatMessagesQuery request, CancellationToken cancellationToken)
+    {
+        var scope = await scopes.GetAsync(cancellationToken);
+        var visibleTickets = db.Tickets.AsNoTracking().WhereInScope(scope).Select(t => t.Id);
+        var ticketId = await db.ChatConversations.AsNoTracking()
+            .Where(c => c.Id == request.ConversationId && visibleTickets.Contains(c.TicketId))
+            .Select(c => (Guid?)c.TicketId)
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(ChatTokens.NotFoundCode, "The conversation was not found.");
+
+        return await TicketQueries.GetMessagesAsync(db, ticketId, publicOnly: true, _ => string.Empty, cancellationToken);
+    }
+}
+
 public sealed record AgentChatMessageCommand(Guid ConversationId, string Body) : IRequest;
 
 internal sealed class AgentChatMessageValidator : AbstractValidator<AgentChatMessageCommand>
@@ -323,6 +346,11 @@ internal sealed class AgentChatEndpoints : IEndpoint
         group.MapGet("/", async (string? status, ISender sender, CancellationToken ct) => ApiResults.Ok(await sender.Send(new ListChatsQuery(status), ct)))
             .WithName("ListChats")
             .Produces<ApiResponse<IReadOnlyList<ChatConversationResponse>>>();
+
+        group.MapGet("/{id:guid}/messages", async (Guid id, ISender sender, CancellationToken ct) =>
+                ApiResults.Ok(await sender.Send(new GetAgentChatMessagesQuery(id), ct)))
+            .WithName("GetAgentChatMessages")
+            .Produces<ApiResponse<IReadOnlyList<TicketMessageResponse>>>();
 
         group.MapPost("/{id:guid}/accept", async (Guid id, ISender sender, CancellationToken ct) =>
             {
