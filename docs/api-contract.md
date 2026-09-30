@@ -1,6 +1,6 @@
 # API Contract
 
-The machine-readable contract is the OpenAPI document at `/openapi/v1.json` (Development: Swagger UI at `/swagger`). This page defines the conventions every endpoint follows.
+The machine-readable contract is the OpenAPI document at `/openapi/v1.json` (Development: Swagger UI at `/swagger`). This page defines the conventions every endpoint follows; [endpoints.md](endpoints.md) lists every endpoint with its route group and permission.
 
 ## Base path and versioning
 
