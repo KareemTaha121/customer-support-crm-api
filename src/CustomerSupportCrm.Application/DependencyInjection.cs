@@ -6,6 +6,7 @@ using CustomerSupportCrm.Application.Features.Attachments;
 using CustomerSupportCrm.Application.Features.Authentication.Common;
 using CustomerSupportCrm.Application.Features.Customers.Common;
 using CustomerSupportCrm.Application.Features.Notifications;
+using CustomerSupportCrm.Application.Features.Sla;
 using CustomerSupportCrm.Application.Features.Tickets;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,9 @@ public static class DependencyInjection
         services.AddScoped<TicketFactory>();
         services.AddScoped<TicketMessageWriter>();
         services.AddScoped<TicketHistoryRecorder>();
+        services.AddScoped<SlaCalculator>();
+        services.AddScoped<AssignmentEngine>();
+        services.AddScoped<EscalationExecutor>();
 
         return services;
     }

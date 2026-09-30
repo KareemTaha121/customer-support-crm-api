@@ -2,6 +2,8 @@ using CustomerSupportCrm.Application.Abstractions.Authentication;
 using CustomerSupportCrm.Domain.Organizations;
 using CustomerSupportCrm.Domain.Roles;
 using CustomerSupportCrm.Domain.Shared;
+using CustomerSupportCrm.Domain.Sla;
+using CustomerSupportCrm.Domain.Tickets;
 using CustomerSupportCrm.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +26,14 @@ internal sealed partial class DatabaseInitializer(
     [
         ("Manager", "Supervises teams: assignment, escalation, content, automation and reports.", Permissions.ManagerDefaults),
         ("Agent", "Handles tickets, customers and live chat.", Permissions.AgentDefaults),
+    ];
+
+    private static readonly (string Name, string NameAr)[] DefaultCategories =
+    [
+        ("General inquiry", "استفسار عام"),
+        ("Technical issue", "مشكلة فنية"),
+        ("Billing", "الفواتير"),
+        ("Complaint", "شكوى"),
     ];
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
@@ -50,6 +60,35 @@ internal sealed partial class DatabaseInitializer(
             var branch = Branch.Create("HQ", "Head Office", null, null);
             db.Branches.Add(branch);
             db.Departments.Add(Department.Create(branch.Id, "SUPPORT", "Customer Support", null));
+        }
+
+        if (!await db.SlaPolicies.AnyAsync(cancellationToken))
+        {
+            var policy = SlaPolicy.Create("Standard");
+            policy.Update(
+                "Standard",
+                "Default targets, around the clock.",
+                isActive: true,
+                isDefault: true,
+                categoryId: null,
+                departmentId: null,
+                businessHoursOnly: false,
+                workDays: [0, 1, 2, 3, 4],
+                workStart: new TimeOnly(8, 0),
+                workEnd: new TimeOnly(17, 0),
+                targets:
+                [
+                    (TicketPriority.Urgent, 30, 4 * 60),
+                    (TicketPriority.High, 60, 8 * 60),
+                    (TicketPriority.Medium, 4 * 60, 24 * 60),
+                    (TicketPriority.Low, 8 * 60, 72 * 60),
+                ]);
+            db.SlaPolicies.Add(policy);
+        }
+
+        if (!await db.TicketCategories.AnyAsync(cancellationToken))
+        {
+            db.TicketCategories.AddRange(DefaultCategories.Select((c, index) => TicketCategory.Create(c.Name, c.NameAr, null, null, null, index)));
         }
 
         await db.SaveChangesAsync(cancellationToken);

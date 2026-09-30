@@ -4,6 +4,8 @@ using CustomerSupportCrm.Application.Abstractions.Files;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Notifications;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
+using CustomerSupportCrm.Application.Features.Dashboard;
+using CustomerSupportCrm.Application.Features.Sla;
 using CustomerSupportCrm.Infrastructure.Auditing;
 using CustomerSupportCrm.Infrastructure.Authentication;
 using CustomerSupportCrm.Infrastructure.Authorization;
@@ -80,6 +82,8 @@ public static class DependencyInjection
         services.AddSingleton<IRealtimeNotifier, SignalRRealtimeNotifier>();
 
         services.AddOptions<BackgroundJobOptions>().BindConfiguration(BackgroundJobOptions.SectionName);
+        services.AddRecurringRequest<EvaluateSlaCommand>(TimeSpan.FromMinutes(1));
+        services.AddRecurringRequest<SendTaskRemindersCommand>(TimeSpan.FromMinutes(1));
     }
 
     private static void AddIdentityServices(this IServiceCollection services)
