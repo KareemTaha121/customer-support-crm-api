@@ -4,12 +4,15 @@ using CustomerSupportCrm.Application.Abstractions.Authentication;
 using CustomerSupportCrm.Application.Abstractions.Channels;
 using CustomerSupportCrm.Application.Abstractions.Files;
 using CustomerSupportCrm.Application.Abstractions.Http;
+using CustomerSupportCrm.Application.Abstractions.Integrations;
 using CustomerSupportCrm.Application.Abstractions.Notifications;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Abstractions.Reporting;
 using CustomerSupportCrm.Application.Abstractions.Search;
 using CustomerSupportCrm.Application.Features.Channels;
 using CustomerSupportCrm.Application.Features.Dashboard;
+using CustomerSupportCrm.Application.Features.Integrations;
+using CustomerSupportCrm.Application.Features.Settings;
 using CustomerSupportCrm.Application.Features.Sla;
 using CustomerSupportCrm.Infrastructure.Ai;
 using CustomerSupportCrm.Infrastructure.Auditing;
@@ -18,6 +21,7 @@ using CustomerSupportCrm.Infrastructure.Authorization;
 using CustomerSupportCrm.Infrastructure.BackgroundJobs;
 using CustomerSupportCrm.Infrastructure.Channels;
 using CustomerSupportCrm.Infrastructure.Files;
+using CustomerSupportCrm.Infrastructure.Integrations;
 using CustomerSupportCrm.Infrastructure.Persistence;
 using CustomerSupportCrm.Infrastructure.Persistence.Interceptors;
 using CustomerSupportCrm.Infrastructure.Persistence.Seed;
@@ -25,6 +29,7 @@ using CustomerSupportCrm.Infrastructure.Realtime;
 using CustomerSupportCrm.Infrastructure.Reporting;
 using CustomerSupportCrm.Infrastructure.Search;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -116,6 +121,17 @@ public static class DependencyInjection
 
         services.AddRecurringRequest<DispatchOutboxCommand>(TimeSpan.FromSeconds(15));
 
+        // Keys must survive restarts (they decrypt webhook secrets): persist them with the file storage.
+        services.AddDataProtection()
+            .SetApplicationName("CustomerSupportCrm")
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "App_Data", "keys")));
+        services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
+        services.AddScoped<ICurrentApiClient, HttpCurrentApiClient>();
+        services.AddHttpClient<IWebhookSender, SafeWebhookSender>(client => client.Timeout = TimeSpan.FromSeconds(15))
+            .ConfigurePrimaryHttpMessageHandler(SafeWebhookSender.CreateHandler);
+        services.AddRecurringRequest<DispatchWebhooksCommand>(TimeSpan.FromSeconds(15));
+        services.AddRecurringRequest<AutoCloseResolvedTicketsCommand>(TimeSpan.FromHours(1));
+
         services.AddOptions<AiOptions>().BindConfiguration(AiOptions.SectionName);
         services.AddSingleton<IAiCompletionClient, AnthropicAiClient>();
     }
@@ -127,7 +143,9 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer()
+            .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, null);
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
             .Configure<IOptions<JwtOptions>>((bearer, jwtOptions) =>
             {

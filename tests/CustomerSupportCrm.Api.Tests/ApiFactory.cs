@@ -23,6 +23,7 @@ public class ApiFactory : WebApplicationFactory<Program>
     {
         builder.UseSetting("Database:ConnectionString", UnreachableDatabase);
         builder.UseSetting("Database:InitializeOnStartup", "false");
+        builder.UseSetting("BackgroundJobs:Enabled", "false");
         builder.UseSetting("RateLimiting:Authentication:PermitLimit", RateLimitPermits.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         builder.ConfigureTestServices(services =>

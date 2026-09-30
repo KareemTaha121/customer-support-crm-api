@@ -73,6 +73,7 @@ public sealed class PostgresApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("Bootstrap:AdminEmail", AdminEmail);
         builder.UseSetting("Bootstrap:AdminPassword", AdminPassword);
         builder.UseSetting("RateLimiting:Authentication:PermitLimit", "10000");
+        builder.UseSetting("BackgroundJobs:Enabled", "false");
     }
 }
 

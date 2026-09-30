@@ -1,6 +1,8 @@
 using CustomerSupportCrm.Application.Abstractions.Authentication;
 using CustomerSupportCrm.Application.Abstractions.Authorization;
+using CustomerSupportCrm.Domain.Integrations;
 using CustomerSupportCrm.Domain.Roles;
+using CustomerSupportCrm.Infrastructure.Integrations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +27,19 @@ internal static class AuthorizationSetup
         foreach (var permission in Permissions.All)
         {
             builder.AddPolicy(permission, policy => policy.RequireStaff().RequireClaim(CrmClaimTypes.Permission, permission));
+        }
+
+        builder.AddPolicy(PolicyNames.ApiClient, policy => policy
+            .AddAuthenticationSchemes(ApiKeyAuthenticationHandler.SchemeName)
+            .RequireAuthenticatedUser()
+            .RequireClaim(CrmClaimTypes.Actor, ActorTypes.ApiClient));
+
+        foreach (var scope in ApiScopes.All)
+        {
+            builder.AddPolicy(PolicyNames.ForScope(scope), policy => policy
+                .AddAuthenticationSchemes(ApiKeyAuthenticationHandler.SchemeName)
+                .RequireAuthenticatedUser()
+                .RequireClaim(CrmClaimTypes.Scope, scope));
         }
 
         builder.AddPolicy(PolicyNames.RolesRead, policy => policy

@@ -8,8 +8,10 @@ using CustomerSupportCrm.Application.Features.Attachments;
 using CustomerSupportCrm.Application.Features.Authentication.Common;
 using CustomerSupportCrm.Application.Features.Channels;
 using CustomerSupportCrm.Application.Features.Customers.Common;
+using CustomerSupportCrm.Application.Features.Integrations;
 using CustomerSupportCrm.Application.Features.Notifications;
 using CustomerSupportCrm.Application.Features.Reports;
+using CustomerSupportCrm.Application.Features.Settings;
 using CustomerSupportCrm.Application.Features.Sla;
 using CustomerSupportCrm.Application.Features.Tickets;
 using FluentValidation;
@@ -28,6 +30,7 @@ public static class DependencyInjection
         {
             config.RegisterServicesFromAssembly(assembly);
             config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            config.AddOpenBehavior(typeof(FeatureToggleBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
@@ -47,6 +50,8 @@ public static class DependencyInjection
         services.AddScoped<CustomerMessenger>();
         services.AddScoped<ReportFilterFactory>();
         services.AddScoped<AiAssistant>();
+        services.AddScoped<SettingsReader>();
+        services.AddScoped<WebhookPublisher>();
         services.AddScoped<CustomerResolver>();
         services.AddScoped<IChatAccessValidator, ChatAccessValidator>();
 

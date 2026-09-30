@@ -15,10 +15,14 @@ public static class CrmClaimTypes
 
     /// <summary>Customer id, on customer-portal tokens only.</summary>
     public const string CustomerId = "cid";
+
+    /// <summary>External API scope, on API-key identities only.</summary>
+    public const string Scope = "scope";
 }
 
 public static class ActorTypes
 {
     public const string Staff = "staff";
     public const string Customer = "customer";
+    public const string ApiClient = "api_client";
 }

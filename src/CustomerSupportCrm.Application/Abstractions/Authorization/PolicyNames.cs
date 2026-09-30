@@ -15,6 +15,9 @@ public static class PolicyNames
     /// <summary>An external system calling with an API key. Default for /api/v1/external.</summary>
     public const string ApiClient = "policy:api-client";
 
+    /// <summary>External API scope policy (API keys), e.g. policy:scope:customers:write.</summary>
+    public static string ForScope(string scope) => $"policy:scope:{scope}";
+
     /// <summary>Read roles: needed both to manage roles and to assign them to users.</summary>
     public const string RolesRead = "policy:roles.read";
 }
