@@ -1,5 +1,6 @@
 using CustomerSupportCrm.Application.Abstractions.Authorization;
 using CustomerSupportCrm.Application.Abstractions.Http;
+using CustomerSupportCrm.Application.Features.CustomerPortal;
 using CustomerSupportCrm.Infrastructure.Realtime;
 
 namespace CustomerSupportCrm.Api.Endpoints;
@@ -21,7 +22,10 @@ internal static class EndpointExtensions
             endpoint.MapEndpoint(staff);
         }
 
-        var portal = app.MapGroup($"{ApiV1Prefix}/portal").RequireAuthorization(PolicyNames.Customer).WithTags("Portal");
+        var portal = app.MapGroup($"{ApiV1Prefix}/portal")
+            .RequireAuthorization(PolicyNames.Customer)
+            .AddEndpointFilter<ActivePortalAccountFilter>()
+            .WithTags("Portal");
         foreach (var endpoint in app.Services.GetServices<IPortalEndpoint>())
         {
             endpoint.MapEndpoint(portal);

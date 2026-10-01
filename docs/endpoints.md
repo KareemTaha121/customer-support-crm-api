@@ -7,7 +7,7 @@ Route groups (`src/CustomerSupportCrm.Api/Endpoints/EndpointExtensions.cs`):
 | Prefix | Callers | Authentication |
 |--------|---------|----------------|
 | `/api/v1` | Staff web app | Staff JWT (`Authorization: Bearer`), permission policies named by code |
-| `/api/v1/portal` | Customer portal | Customer JWT (8 h, not refreshable) |
+| `/api/v1/portal` | Customer portal | Customer JWT (8 h, not refreshable); every request checks the account is still active (401 `ACCOUNT_DISABLED` after access is revoked) |
 | `/api/v1/public` | Anonymous visitors | None (rate limited; some endpoints behind feature toggles) |
 | `/api/v1/external` | Integrations | API key (`X-Api-Key`) with scopes |
 | `/hubs/staff`, `/hubs/chat` | SignalR | Staff JWT via `access_token` query / per-conversation token |
