@@ -224,5 +224,5 @@ Route groups (`src/CustomerSupportCrm.Api/Endpoints/EndpointExtensions.cs`):
 
 | Hub | Events (server → client) | Client methods |
 |-----|--------------------------|----------------|
-| `/hubs/staff` | `notificationCreated`, `ticketUpdated`, `chatMessage`, `chatUpdated` | `JoinConversation(id)`, `LeaveConversation(id)` |
+| `/hubs/staff` | `notificationCreated`, `ticketUpdated`, `chatMessage`, `chatUpdated` | `JoinConversation(id)` (needs `chat.handle` and the ticket in scope), `LeaveConversation(id)` |
 | `/hubs/chat` | `chatMessage`, `chatUpdated` | `JoinConversation(id, accessToken)` |

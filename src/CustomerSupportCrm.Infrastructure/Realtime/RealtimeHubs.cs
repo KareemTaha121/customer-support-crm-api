@@ -14,7 +14,7 @@ namespace CustomerSupportCrm.Infrastructure.Realtime;
 /// the live-chat queue. Clients only listen; all actions go through the HTTP API.
 /// </summary>
 [Authorize(Policy = PolicyNames.Staff)]
-public sealed class StaffHub : Hub
+public sealed class StaffHub(IChatAccessValidator access) : Hub
 {
     public const string Path = "/hubs/staff";
 
@@ -28,9 +28,27 @@ public sealed class StaffHub : Hub
         await base.OnConnectedAsync();
     }
 
-    /// <summary>Lets an agent follow one conversation (e.g. while viewing it).</summary>
-    public Task JoinConversation(Guid conversationId) =>
-        Groups.AddToGroupAsync(Context.ConnectionId, RealtimeGroups.ChatConversation(conversationId));
+    /// <summary>
+    /// Lets a chat agent follow one conversation (e.g. while viewing it). Requires <c>chat.handle</c>
+    /// and the conversation's ticket in the agent's branch/department scope; otherwise the
+    /// conversation is reported as not found so its existence is not disclosed.
+    /// </summary>
+    public async Task JoinConversation(Guid conversationId)
+    {
+        var user = Context.User;
+        if (user?.HasClaim(CrmClaimTypes.Permission, Permissions.ChatHandle) != true
+            || !Guid.TryParse(user.FindFirst(CrmClaimTypes.Subject)?.Value, out var userId)
+            || !await access.CanStaffJoinAsync(
+                conversationId,
+                new UserId(userId),
+                user.HasClaim(CrmClaimTypes.Permission, Permissions.DataAllBranches),
+                Context.ConnectionAborted))
+        {
+            throw new HubException("Conversation not found.");
+        }
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, RealtimeGroups.ChatConversation(conversationId));
+    }
 
     public Task LeaveConversation(Guid conversationId) =>
         Groups.RemoveFromGroupAsync(Context.ConnectionId, RealtimeGroups.ChatConversation(conversationId));

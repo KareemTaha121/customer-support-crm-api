@@ -14,6 +14,7 @@ using CustomerSupportCrm.Domain.Customers;
 using CustomerSupportCrm.Domain.Roles;
 using CustomerSupportCrm.Domain.Shared;
 using CustomerSupportCrm.Domain.Tickets;
+using CustomerSupportCrm.Domain.Users;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -64,9 +65,29 @@ internal static class ChatTokens
     }
 }
 
-/// <summary>Lets SignalR visitors join only conversations whose token they hold.</summary>
+/// <summary>Staff-side lookups shared by the chat HTTP routes and the staff hub.</summary>
+internal static class AgentChats
+{
+    /// <summary>The conversation's ticket id, or null when it does not exist or is outside <paramref name="scope"/>.</summary>
+    public static Task<Guid?> FindTicketIdInScopeAsync(IApplicationDbContext db, AccessScope scope, Guid conversationId, CancellationToken cancellationToken)
+    {
+        var visibleTickets = db.Tickets.AsNoTracking().WhereInScope(scope).Select(t => t.Id);
+        return db.ChatConversations.AsNoTracking()
+            .Where(c => c.Id == conversationId && visibleTickets.Contains(c.TicketId))
+            .Select(c => (Guid?)c.TicketId)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+}
+
+/// <summary>Lets SignalR visitors join only conversations whose token they hold, and staff only in-scope ones.</summary>
 internal sealed class ChatAccessValidator(IApplicationDbContext db) : IChatAccessValidator
 {
+    public async Task<bool> CanStaffJoinAsync(Guid conversationId, UserId userId, bool allBranches, CancellationToken cancellationToken)
+    {
+        var scope = await AccessScopeProvider.LoadAsync(db, userId, allBranches, cancellationToken);
+        return await AgentChats.FindTicketIdInScopeAsync(db, scope, conversationId, cancellationToken) is not null;
+    }
+
     public async Task<bool> CanJoinAsync(Guid conversationId, string accessToken, CancellationToken cancellationToken)
     {
         try
@@ -298,11 +319,7 @@ internal sealed class GetAgentChatMessagesHandler(IApplicationDbContext db, IAcc
     public async Task<IReadOnlyList<TicketMessageResponse>> Handle(GetAgentChatMessagesQuery request, CancellationToken cancellationToken)
     {
         var scope = await scopes.GetAsync(cancellationToken);
-        var visibleTickets = db.Tickets.AsNoTracking().WhereInScope(scope).Select(t => t.Id);
-        var ticketId = await db.ChatConversations.AsNoTracking()
-            .Where(c => c.Id == request.ConversationId && visibleTickets.Contains(c.TicketId))
-            .Select(c => (Guid?)c.TicketId)
-            .SingleOrDefaultAsync(cancellationToken)
+        var ticketId = await AgentChats.FindTicketIdInScopeAsync(db, scope, request.ConversationId, cancellationToken)
             ?? throw new NotFoundException(ChatTokens.NotFoundCode, "The conversation was not found.");
 
         return await TicketQueries.GetMessagesAsync(db, ticketId, publicOnly: true, _ => string.Empty, cancellationToken);

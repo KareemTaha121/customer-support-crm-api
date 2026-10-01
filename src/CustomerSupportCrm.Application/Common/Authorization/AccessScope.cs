@@ -3,6 +3,7 @@ using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Exceptions;
 using CustomerSupportCrm.Domain.Common;
 using CustomerSupportCrm.Domain.Roles;
+using CustomerSupportCrm.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace CustomerSupportCrm.Application.Common.Authorization;
@@ -49,12 +50,20 @@ internal sealed class AccessScopeProvider(IApplicationDbContext db, ICurrentUser
             return _cached = new AccessScope(false, [], []);
         }
 
-        if (currentUser.HasPermission(Permissions.DataAllBranches))
+        return _cached = await LoadAsync(db, currentUser.UserId, currentUser.HasPermission(Permissions.DataAllBranches), cancellationToken);
+    }
+
+    /// <summary>
+    /// Builds a user's scope outside an HTTP request (e.g. a SignalR hub, which must not rely on
+    /// <c>IHttpContextAccessor</c>). <paramref name="allBranches"/> is the <c>data.all_branches</c> permission.
+    /// </summary>
+    internal static async Task<AccessScope> LoadAsync(IApplicationDbContext db, UserId userId, bool allBranches, CancellationToken cancellationToken)
+    {
+        if (allBranches)
         {
-            return _cached = AccessScope.Everything;
+            return AccessScope.Everything;
         }
 
-        var userId = currentUser.UserId;
         var scopes = await db.Users
             .AsNoTracking()
             .Where(u => u.Id == userId)
@@ -62,7 +71,7 @@ internal sealed class AccessScopeProvider(IApplicationDbContext db, ICurrentUser
             .Select(s => new { s.BranchId, s.DepartmentId })
             .ToListAsync(cancellationToken);
 
-        return _cached = new AccessScope(
+        return new AccessScope(
             false,
             [.. scopes.Where(s => s.DepartmentId == null).Select(s => s.BranchId).Distinct()],
             [.. scopes.Where(s => s.DepartmentId != null).Select(s => s.DepartmentId!.Value).Distinct()]);
