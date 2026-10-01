@@ -1,6 +1,7 @@
 using CustomerSupportCrm.Domain.Customers;
 using CustomerSupportCrm.Domain.Organizations;
 using CustomerSupportCrm.Domain.Shared;
+using CustomerSupportCrm.Domain.Sla;
 using CustomerSupportCrm.Domain.Tickets;
 using CustomerSupportCrm.Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,9 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.HasOne<Branch>().WithMany().HasForeignKey(t => t.BranchId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Department>().WithMany().HasForeignKey(t => t.DepartmentId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<User>().WithMany().HasForeignKey(t => t.AssignedAgentId).OnDelete(DeleteBehavior.SetNull);
+
+        // Deleting a policy clears the reference; tickets keep their computed due dates.
+        builder.HasOne<SlaPolicy>().WithMany().HasForeignKey(t => t.SlaPolicyId).OnDelete(DeleteBehavior.SetNull);
 
         builder.HasXminConcurrencyToken();
     }
