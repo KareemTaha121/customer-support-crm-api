@@ -4,6 +4,10 @@ public sealed record LoginRequest(string Email, string Password);
 
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
+public sealed record ForgotPasswordRequest(string Email);
+
+public sealed record CompletePasswordResetRequest(string Token, string NewPassword);
+
 /// <summary>
 /// Returned by login and refresh. The refresh token is never in the body; it is set as an
 /// HttpOnly cookie scoped to the auth endpoints.

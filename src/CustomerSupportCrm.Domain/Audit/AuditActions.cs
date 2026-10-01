@@ -9,6 +9,8 @@ public static class AuditActions
     public const string Logout = "auth.logout";
     public const string RefreshTokenReuseDetected = "auth.refresh.reuse_detected";
     public const string PasswordChanged = "auth.password.changed";
+    public const string PasswordResetRequested = "auth.password.reset_requested";
+    public const string PasswordReset = "auth.password.reset";
 
     public const string UserCreated = "users.created";
     public const string UserRolesChanged = "users.roles_changed";

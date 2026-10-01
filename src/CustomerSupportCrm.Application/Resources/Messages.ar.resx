@@ -69,6 +69,9 @@
   <data name="INVALID_CURRENT_PASSWORD" xml:space="preserve">
     <value>كلمة المرور الحالية غير صحيحة.</value>
   </data>
+  <data name="INVALID_RESET_TOKEN" xml:space="preserve">
+    <value>رابط إعادة التعيين غير صالح أو منتهي الصلاحية. اطلب رابطاً جديداً.</value>
+  </data>
   <data name="USER_NOT_FOUND" xml:space="preserve">
     <value>المستخدم غير موجود.</value>
   </data>

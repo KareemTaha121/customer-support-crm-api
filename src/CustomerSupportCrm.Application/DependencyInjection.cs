@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddEndpoints(assembly);
         services.AddLocalization();
         services.AddScoped<UserSessionService>();
+        services.AddScoped<PasswordResetMailer>();
         services.AddScoped<IAccessScopeProvider, AccessScopeProvider>();
         services.AddScoped<NotificationSender>();
         services.AddScoped<AttachmentService>();

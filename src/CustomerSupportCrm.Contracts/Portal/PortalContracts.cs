@@ -19,6 +19,8 @@ public sealed record PortalUpdateProfileRequest(string Name, string Language);
 
 public sealed record PortalChangePasswordRequest(string CurrentPassword, string NewPassword);
 
+public sealed record PortalResetPasswordRequest(string Token, string NewPassword);
+
 public sealed record PortalCreateTicketRequest(string Subject, string Message, Guid? CategoryId);
 
 public sealed record PortalMessageRequest(string Body, IReadOnlyList<Guid>? AttachmentIds);

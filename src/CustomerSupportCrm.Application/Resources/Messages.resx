@@ -69,6 +69,9 @@
   <data name="INVALID_CURRENT_PASSWORD" xml:space="preserve">
     <value>The current password is incorrect.</value>
   </data>
+  <data name="INVALID_RESET_TOKEN" xml:space="preserve">
+    <value>The reset link is invalid or has expired. Request a new one.</value>
+  </data>
   <data name="USER_NOT_FOUND" xml:space="preserve">
     <value>The user was not found.</value>
   </data>

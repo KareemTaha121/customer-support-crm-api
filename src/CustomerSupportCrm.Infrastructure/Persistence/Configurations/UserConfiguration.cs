@@ -20,6 +20,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.DisplayName).HasMaxLength(User.DisplayNameMaxLength);
         builder.Property(user => user.PasswordHash).HasMaxLength(512);
         builder.Property(user => user.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(user => user.PasswordResetTokenHash).HasMaxLength(128);
+        builder.HasIndex(user => user.PasswordResetTokenHash).HasFilter("password_reset_token_hash IS NOT NULL");
 
         builder.HasMany(user => user.Roles)
             .WithOne()

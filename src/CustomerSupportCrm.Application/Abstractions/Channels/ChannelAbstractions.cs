@@ -44,3 +44,12 @@ public sealed class CustomerPortalOptions
     /// <summary>Absolute base URL of the customer portal, e.g. https://support.example.com/portal.</summary>
     public string BaseUrl { get; init; } = "http://localhost:4200/portal";
 }
+
+/// <summary>Links to the staff web app (password reset emails).</summary>
+public sealed class StaffAppOptions
+{
+    public const string SectionName = "StaffApp";
+
+    /// <summary>Absolute base URL of the staff web app, e.g. https://support.example.com.</summary>
+    public string BaseUrl { get; init; } = "http://localhost:4200";
+}

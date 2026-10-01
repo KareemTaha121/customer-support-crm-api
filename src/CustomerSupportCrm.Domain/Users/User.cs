@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using CustomerSupportCrm.Domain.Common;
 using CustomerSupportCrm.Domain.Roles;
 using CustomerSupportCrm.Domain.Shared;
@@ -21,6 +23,8 @@ public sealed class User : Entity<UserId>, IAuditableEntity
     public const string InvalidDisplayNameCode = "INVALID_DISPLAY_NAME";
 
     public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+    public static readonly TimeSpan PasswordResetLifetime = TimeSpan.FromMinutes(30);
+    public static readonly TimeSpan PasswordResetCooldown = TimeSpan.FromMinutes(1);
 
     private readonly List<UserRole> _roles = [];
     private readonly List<UserScope> _scopes = [];
@@ -53,6 +57,11 @@ public sealed class User : Entity<UserId>, IAuditableEntity
 
     public DateTimeOffset? LastLoginAt { get; private set; }
 
+    /// <summary>SHA-256 of the emailed password reset token; null when no reset is pending.</summary>
+    public string? PasswordResetTokenHash { get; private set; }
+
+    public DateTimeOffset? PasswordResetExpiresAt { get; private set; }
+
     public IReadOnlyCollection<UserRole> Roles => _roles;
 
     /// <summary>Branches/departments whose data the user may access (see <see cref="UserScope"/>).</summary>
@@ -67,6 +76,8 @@ public sealed class User : Entity<UserId>, IAuditableEntity
     public Guid? UpdatedBy { get; private set; }
 
     public bool IsActive => Status == UserStatus.Active;
+
+    private bool CanSignIn => IsActive;
 
     public IReadOnlyList<RoleId> RoleIds => [.. _roles.Select(r => r.RoleId)];
 
@@ -94,6 +105,33 @@ public sealed class User : Entity<UserId>, IAuditableEntity
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
         PasswordHash = passwordHash;
+    }
+
+    /// <summary>False when a reset token was issued less than <see cref="PasswordResetCooldown"/> ago (stops email flooding).</summary>
+    public bool CanRequestPasswordReset(DateTimeOffset now) =>
+        PasswordResetExpiresAt is not { } expires || expires - PasswordResetLifetime + PasswordResetCooldown <= now;
+
+    /// <summary>Stores the hash of a new reset token; it replaces any pending one, so only the latest link works.</summary>
+    public void StartPasswordReset(string tokenHash, DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+        PasswordResetTokenHash = tokenHash;
+        PasswordResetExpiresAt = now + PasswordResetLifetime;
+    }
+
+    /// <summary>True when <paramref name="tokenHash"/> is the pending, unexpired reset token of an account that may sign in.</summary>
+    public bool IsValidPasswordReset(string tokenHash, DateTimeOffset now) =>
+        CanSignIn && PasswordResetTokenHash is not null && PasswordResetExpiresAt > now
+        && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(PasswordResetTokenHash), Encoding.UTF8.GetBytes(tokenHash));
+
+    /// <summary>Single use: sets the new password and clears the token and the lockout. Check <see cref="IsValidPasswordReset"/> first.</summary>
+    public void CompletePasswordReset(string passwordHash)
+    {
+        ChangePasswordHash(passwordHash);
+        PasswordResetTokenHash = null;
+        PasswordResetExpiresAt = null;
+        FailedLoginAttempts = 0;
+        LockoutEndsAt = null;
     }
 
     public void SetRoles(IEnumerable<RoleId> roleIds)

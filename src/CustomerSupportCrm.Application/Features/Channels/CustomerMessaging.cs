@@ -54,6 +54,11 @@ internal static class CustomerTemplates
             ? ("تم حل طلبك", $"تم حل طلبك رقم {number}. نرجو تقييم تجربتك، ويمكنك الرد إذا احتجت مزيداً من المساعدة.", "قيّم الخدمة")
             : ("Your request was resolved", $"Request {number} has been resolved. Please rate your experience, or reply if you need more help.", "Rate our service");
 
+    public static (string Subject, string Heading, string Body, string Link) PasswordReset(string language) =>
+        language == "ar"
+            ? ("إعادة تعيين كلمة المرور", "إعادة تعيين كلمة المرور", "تلقّينا طلباً لإعادة تعيين كلمة المرور لحسابك. الرابط صالح لمدة 30 دقيقة ولمرة واحدة فقط. إذا لم تطلب ذلك فتجاهل هذه الرسالة؛ ستبقى كلمة مرورك كما هي.", "تعيين كلمة مرور جديدة")
+            : ("Reset your password", "Reset your password", "We received a request to reset the password for your account. The link is valid for 30 minutes and can be used once. If you did not ask for this, ignore this email; your password stays the same.", "Set a new password");
+
     public static (string Subject, string Heading, string Body) Verification(string language, string code) =>
         language == "ar"
             ? ("رمز التحقق", "تأكيد البريد الإلكتروني", $"رمز التحقق الخاص بك هو: {code}\nصالح لمدة 24 ساعة.")
@@ -116,6 +121,15 @@ public sealed class CustomerMessenger(IApplicationDbContext db, IOptions<Custome
         var organization = await db.Organizations.AsNoTracking().Select(o => new { o.Name, o.PrimaryColor }).FirstOrDefaultAsync(cancellationToken);
         var (subject, heading, body) = CustomerTemplates.Verification(language, code);
         var rendered = CustomerTemplates.Build(language, organization?.Name ?? "Support", organization?.PrimaryColor ?? "#1F6FEB", subject, heading, body, null, null);
+        db.OutboundMessages.Add(OutboundMessage.Queue(TicketChannel.Email, email, rendered.Subject, rendered.Text, rendered.Html, null, null, time.GetUtcNow()));
+    }
+
+    /// <summary>Password reset link for a staff user or a portal account (not tied to a ticket).</summary>
+    public async Task QueuePasswordResetAsync(string email, string language, string resetUrl, CancellationToken cancellationToken)
+    {
+        var organization = await db.Organizations.AsNoTracking().Select(o => new { o.Name, o.PrimaryColor }).FirstOrDefaultAsync(cancellationToken);
+        var (subject, heading, body, link) = CustomerTemplates.PasswordReset(language);
+        var rendered = CustomerTemplates.Build(language, organization?.Name ?? "Support", organization?.PrimaryColor ?? "#1F6FEB", subject, heading, body, resetUrl, link);
         db.OutboundMessages.Add(OutboundMessage.Queue(TicketChannel.Email, email, rendered.Subject, rendered.Text, rendered.Html, null, null, time.GetUtcNow()));
     }
 

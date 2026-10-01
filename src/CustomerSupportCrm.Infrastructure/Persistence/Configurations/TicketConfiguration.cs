@@ -110,6 +110,8 @@ internal sealed class CustomerAccountConfiguration : IEntityTypeConfiguration<Cu
         builder.Property(a => a.DisplayName).HasMaxLength(Customer.NameMaxLength);
         builder.Property(a => a.PasswordHash).HasMaxLength(512);
         builder.Property(a => a.VerificationCodeHash).HasMaxLength(128);
+        builder.Property(a => a.PasswordResetTokenHash).HasMaxLength(128);
+        builder.HasIndex(a => a.PasswordResetTokenHash).HasFilter("password_reset_token_hash IS NOT NULL");
         builder.HasOne<Customer>().WithMany().HasForeignKey(a => a.CustomerId).OnDelete(DeleteBehavior.Cascade);
         builder.HasXminConcurrencyToken();
     }

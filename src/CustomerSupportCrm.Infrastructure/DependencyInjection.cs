@@ -110,6 +110,7 @@ public static class DependencyInjection
         services.AddOptions<WhatsAppOptions>().BindConfiguration(WhatsAppOptions.SectionName);
         services.AddOptions<SmsOptions>().BindConfiguration(SmsOptions.SectionName);
         services.AddOptions<CustomerPortalOptions>().BindConfiguration(CustomerPortalOptions.SectionName);
+        services.AddOptions<StaffAppOptions>().BindConfiguration(StaffAppOptions.SectionName);
 
         // One Email sender either way, so the dispatcher and GET /channels/status see a single Email channel.
         services.AddSingleton<IMessageSender>(sp =>

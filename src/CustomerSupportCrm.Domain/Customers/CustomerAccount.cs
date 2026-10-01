@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using CustomerSupportCrm.Domain.Common;
 using CustomerSupportCrm.Domain.Shared;
 
@@ -15,6 +16,8 @@ public sealed class CustomerAccount : Entity<Guid>, IAuditableEntity
 
     public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
     public static readonly TimeSpan VerificationLifetime = TimeSpan.FromHours(24);
+    public static readonly TimeSpan PasswordResetLifetime = TimeSpan.FromMinutes(30);
+    public static readonly TimeSpan PasswordResetCooldown = TimeSpan.FromMinutes(1);
 
     private CustomerAccount()
     {
@@ -53,6 +56,14 @@ public sealed class CustomerAccount : Entity<Guid>, IAuditableEntity
     public DateTimeOffset? LockoutEndsAt { get; private set; }
 
     public DateTimeOffset? LastLoginAt { get; private set; }
+
+    /// <summary>SHA-256 of the emailed password reset token; null when no reset is pending.</summary>
+    public string? PasswordResetTokenHash { get; private set; }
+
+    public DateTimeOffset? PasswordResetExpiresAt { get; private set; }
+
+    /// <summary>Portal tokens issued before this instant are rejected (see ActivePortalAccountFilter); set by a password reset.</summary>
+    public DateTimeOffset? SessionsValidFrom { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -127,6 +138,40 @@ public sealed class CustomerAccount : Entity<Guid>, IAuditableEntity
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
         PasswordHash = passwordHash;
+    }
+
+    private bool CanSignIn => IsActive && EmailVerified;
+
+    /// <summary>False when a reset token was issued less than <see cref="PasswordResetCooldown"/> ago (stops email flooding).</summary>
+    public bool CanRequestPasswordReset(DateTimeOffset now) =>
+        PasswordResetExpiresAt is not { } expires || expires - PasswordResetLifetime + PasswordResetCooldown <= now;
+
+    /// <summary>Stores the hash of a new reset token; it replaces any pending one, so only the latest link works.</summary>
+    public void StartPasswordReset(string tokenHash, DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+        PasswordResetTokenHash = tokenHash;
+        PasswordResetExpiresAt = now + PasswordResetLifetime;
+    }
+
+    /// <summary>True when <paramref name="tokenHash"/> is the pending, unexpired reset token of an account that may sign in.</summary>
+    public bool IsValidPasswordReset(string tokenHash, DateTimeOffset now) =>
+        CanSignIn && PasswordResetTokenHash is not null && PasswordResetExpiresAt > now
+        && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(PasswordResetTokenHash), Encoding.UTF8.GetBytes(tokenHash));
+
+    /// <summary>
+    /// Single use: sets the new password, clears the token and the lockout, and ends older portal
+    /// sessions. JWT <c>iat</c> is in whole seconds, so the cut-off is truncated to the second.
+    /// Check <see cref="IsValidPasswordReset"/> first.
+    /// </summary>
+    public void CompletePasswordReset(string passwordHash, DateTimeOffset now)
+    {
+        ChangePasswordHash(passwordHash);
+        PasswordResetTokenHash = null;
+        PasswordResetExpiresAt = null;
+        FailedLoginAttempts = 0;
+        LockoutEndsAt = null;
+        SessionsValidFrom = DateTimeOffset.FromUnixTimeSeconds(now.ToUnixTimeSeconds());
     }
 
     public bool IsLockedOut(DateTimeOffset now) => LockoutEndsAt > now;
