@@ -353,7 +353,9 @@ internal sealed class UpsertExternalCustomerHandler(IApplicationDbContext db, IS
         }
         else
         {
+            var previousName = customer.Name;
             customer.UpdateProfile(type, input.Name, input.CompanyName, input.Language ?? customer.PreferredLanguage, customer.Tags);
+            await CustomerPortal.PortalAccountNames.FollowCustomerRenameAsync(db, customer.Id, previousName, customer.Name, cancellationToken);
         }
 
         if (!string.IsNullOrWhiteSpace(input.Email) && !customer.Contacts.Any(c => c.Type == ContactType.Email && c.Value == Domain.Shared.EmailAddress.Normalize(input.Email)))

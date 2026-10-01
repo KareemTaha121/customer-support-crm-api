@@ -4,6 +4,7 @@ using CustomerSupportCrm.Application.Abstractions.Messaging;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Authorization;
 using CustomerSupportCrm.Application.Common.Exceptions;
+using CustomerSupportCrm.Application.Features.CustomerPortal;
 using CustomerSupportCrm.Application.Common.Pagination;
 using CustomerSupportCrm.Application.Common.Validation;
 using CustomerSupportCrm.Application.Features.Customers.Common;
@@ -147,6 +148,7 @@ internal sealed class UpdateCustomerHandler(IApplicationDbContext db, IAccessSco
         var before = new { customer.Name, customer.Type, customer.CompanyName, customer.PreferredLanguage, customer.Status, customer.Tags };
         customer.UpdateProfile(Enum.Parse<CustomerType>(request.Type, true), request.Name, request.CompanyName, request.PreferredLanguage, request.Tags);
         customer.SetStatus(Enum.Parse<CustomerStatus>(request.Status, true));
+        await PortalAccountNames.FollowCustomerRenameAsync(db, customer.Id, before.Name, customer.Name, cancellationToken);
 
         audit.Record("customers.updated", "Customer", customer.Id.ToString(), before, new { customer.Name, customer.Type, customer.CompanyName, customer.PreferredLanguage, customer.Status, customer.Tags, customer.BranchId, customer.DepartmentId });
         timeline.Record(customer.Id, CustomerActivityTypes.CustomerUpdated, "Profile updated");
