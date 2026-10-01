@@ -113,7 +113,7 @@ Route groups (`src/CustomerSupportCrm.Api/Endpoints/EndpointExtensions.cs`):
 | Method | Route | Permission |
 |--------|-------|-----------|
 | GET | `/dashboard/agent` | `tickets.view` |
-| GET, POST | `/tasks` | — (own tasks) |
+| GET, POST | `/tasks` | — (own tasks; `ticketId`/`customerId` must be in scope, else 404; with `tickets.assign` they list every assignee) |
 | PUT, DELETE | `/tasks/{id}` | — |
 | POST | `/tasks/{id}/complete`, `/tasks/{id}/reopen` | — |
 | GET, POST | `/quick-replies` | — (shared replies need `quickreplies.manage`) |

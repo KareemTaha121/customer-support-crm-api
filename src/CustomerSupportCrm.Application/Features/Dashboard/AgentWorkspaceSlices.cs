@@ -3,6 +3,7 @@ using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Authorization;
 using CustomerSupportCrm.Application.Common.Exceptions;
+using CustomerSupportCrm.Application.Features.Customers.Common;
 using CustomerSupportCrm.Application.Features.Notifications;
 using CustomerSupportCrm.Application.Features.Tickets.Common;
 using CustomerSupportCrm.Contracts.Common;
@@ -94,22 +95,49 @@ internal static class TaskQueries
             t.RemindAt,
             t.CompletedAt,
             t.CreatedAt));
+
+    /// <summary>
+    /// A task's ticket/customer must exist and be in the caller's branch/department scope;
+    /// otherwise 404 with the ticket/customer code, so out-of-scope records are not disclosed.
+    /// </summary>
+    public static async Task EnsureReferencesInScopeAsync(IApplicationDbContext db, AccessScope scope, Guid? ticketId, Guid? customerId, CancellationToken cancellationToken)
+    {
+        if (ticketId is { } t && !await db.Tickets.AsNoTracking().Where(x => x.Id == t).WhereInScope(scope).AnyAsync(cancellationToken))
+        {
+            throw new NotFoundException(TicketErrors.TicketNotFound, "The ticket was not found.");
+        }
+
+        if (customerId is { } c && !await db.Customers.AsNoTracking().Where(x => x.Id == c).WhereInScope(scope).AnyAsync(cancellationToken))
+        {
+            throw new NotFoundException(CustomerErrors.CustomerNotFound, "The customer was not found.");
+        }
+    }
 }
 
 /// <param name="Status">open (default), completed or all.</param>
-/// <param name="Assignee">"me" (default) or a user id (requires tickets.assign).</param>
+/// <param name="Assignee">
+/// "me" or a user id (requires tickets.assign). When omitted: the caller's own tasks, except that
+/// tickets.assign holders filtering by an in-scope ticket/customer see every assignee's tasks on it.
+/// </param>
 public sealed record ListTasksQuery(string? Status = null, string? Assignee = null, Guid? TicketId = null, Guid? CustomerId = null) : IRequest<IReadOnlyList<TaskResponse>>;
 
-internal sealed class ListTasksHandler(IApplicationDbContext db, ICurrentUser currentUser) : IRequestHandler<ListTasksQuery, IReadOnlyList<TaskResponse>>
+internal sealed class ListTasksHandler(IApplicationDbContext db, IAccessScopeProvider scopes, ICurrentUser currentUser) : IRequestHandler<ListTasksQuery, IReadOnlyList<TaskResponse>>
 {
     public async Task<IReadOnlyList<TaskResponse>> Handle(ListTasksQuery request, CancellationToken cancellationToken)
     {
         var me = currentUser.UserId;
+        var canSeeOthers = currentUser.HasPermission(Permissions.TicketsAssign);
+        var byRecord = request.TicketId is not null || request.CustomerId is not null;
+        if (byRecord)
+        {
+            await TaskQueries.EnsureReferencesInScopeAsync(db, await scopes.GetAsync(cancellationToken), request.TicketId, request.CustomerId, cancellationToken);
+        }
+
         var query = db.AgentTasks.AsNoTracking();
 
         if (request.Assignee is { } assignee && assignee != "me" && Guid.TryParse(assignee, out var otherId))
         {
-            if (!currentUser.HasPermission(Permissions.TicketsAssign))
+            if (!canSeeOthers)
             {
                 throw new ForbiddenException(ErrorCodes.Forbidden, "You can only see your own tasks.");
             }
@@ -117,7 +145,7 @@ internal sealed class ListTasksHandler(IApplicationDbContext db, ICurrentUser cu
             var other = new UserId(otherId);
             query = query.Where(t => t.AssigneeId == other);
         }
-        else if (request.TicketId is null && request.CustomerId is null)
+        else if (request.Assignee == "me" || !byRecord || !canSeeOthers)
         {
             query = query.Where(t => t.AssigneeId == me);
         }
@@ -154,7 +182,7 @@ internal sealed class SaveTaskValidator : AbstractValidator<SaveTaskCommand>
     }
 }
 
-internal sealed class SaveTaskHandler(IApplicationDbContext db, ICurrentUser currentUser) : IRequestHandler<SaveTaskCommand, TaskResponse>
+internal sealed class SaveTaskHandler(IApplicationDbContext db, IAccessScopeProvider scopes, ICurrentUser currentUser) : IRequestHandler<SaveTaskCommand, TaskResponse>
 {
     public async Task<TaskResponse> Handle(SaveTaskCommand request, CancellationToken cancellationToken)
     {
@@ -170,11 +198,20 @@ internal sealed class SaveTaskHandler(IApplicationDbContext db, ICurrentUser cur
         if (request.TaskId is { } id)
         {
             task = await LoadOwnAsync(db, currentUser, id, cancellationToken);
+
+            // Only new links are checked, so a task stays editable after its ticket/customer moves out of scope.
+            await TaskQueries.EnsureReferencesInScopeAsync(
+                db,
+                await scopes.GetAsync(cancellationToken),
+                input.TicketId != task.TicketId ? input.TicketId : null,
+                input.CustomerId != task.CustomerId ? input.CustomerId : null,
+                cancellationToken);
             task.Update(input.Title, input.Notes, input.TicketId, input.CustomerId, input.DueAt, input.RemindAt);
             task.Reassign(assignee);
         }
         else
         {
+            await TaskQueries.EnsureReferencesInScopeAsync(db, await scopes.GetAsync(cancellationToken), input.TicketId, input.CustomerId, cancellationToken);
             task = AgentTask.Create(assignee, input.Title, input.Notes, input.TicketId, input.CustomerId, input.DueAt, input.RemindAt);
             db.AgentTasks.Add(task);
         }
