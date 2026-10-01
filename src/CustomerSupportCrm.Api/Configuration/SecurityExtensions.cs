@@ -151,6 +151,12 @@ internal static class SecurityExtensions
                     });
             });
 
+            // Article votes: per client IP and article (the path holds the article id), 3 per day.
+            // The help center also remembers a vote per browser; this stops scripted stuffing.
+            options.AddPolicy(RateLimitPolicies.ArticleFeedback, context => RateLimitPartition.GetFixedWindowLimiter(
+                $"{context.Connection.RemoteIpAddress?.ToString() ?? "unknown"}|{context.Request.Path.Value}",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 3, Window = TimeSpan.FromDays(1), QueueLimit = 0 }));
+
             // AI: per signed-in user (or IP for the anonymous chatbot), 20 requests per minute.
             options.AddPolicy(RateLimitPolicies.Ai, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.User.FindFirst("sub")?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",

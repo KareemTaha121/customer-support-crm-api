@@ -507,7 +507,10 @@ internal sealed class SubmitArticleFeedbackHandler(IApplicationDbContext db) : I
 {
     public async Task Handle(SubmitArticleFeedbackCommand request, CancellationToken cancellationToken)
     {
-        var article = await db.KnowledgeArticles.SingleOrDefaultAsync(a => a.Id == request.ArticleId && a.Status == ArticleStatus.Published, cancellationToken)
+        // Anonymous endpoint: only articles the help center shows can be rated (internal ones are 404, as on GET).
+        var article = await db.KnowledgeArticles.SingleOrDefaultAsync(
+                a => a.Id == request.ArticleId && a.Status == ArticleStatus.Published && a.Visibility == ArticleVisibility.Public,
+                cancellationToken)
             ?? throw KnowledgeQueries.NotFound();
         article.RecordFeedback(request.Helpful);
         await db.SaveChangesAsync(cancellationToken);
@@ -537,7 +540,7 @@ internal sealed class PublicKnowledgeBaseEndpoints : IPublicEndpoint
                 await sender.Send(new SubmitArticleFeedbackCommand(id, request.Helpful), ct);
                 return ApiResults.Success();
             })
-            .RequireRateLimiting(RateLimitPolicies.Public)
+            .RequireRateLimiting(RateLimitPolicies.ArticleFeedback)
             .WithName("SubmitKnowledgeArticleFeedback")
             .Produces<ApiResponse<object?>>();
     }
