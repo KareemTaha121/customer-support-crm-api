@@ -3,6 +3,7 @@ using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Authorization;
 using CustomerSupportCrm.Application.Common.Exceptions;
+using CustomerSupportCrm.Application.Common.Validation;
 using CustomerSupportCrm.Application.Features.Tickets.Common;
 using CustomerSupportCrm.Contracts.Common;
 using CustomerSupportCrm.Contracts.Tickets;
@@ -66,6 +67,15 @@ internal sealed class SaveTicketCategoryHandler(IApplicationDbContext db, IAudit
         {
             category = await db.TicketCategories.SingleOrDefaultAsync(c => c.Id == id, cancellationToken)
                 ?? throw new NotFoundException(TicketErrors.CategoryNotFound, "The category was not found.");
+            if (input.ParentId is { } newParent && newParent != category.ParentId)
+            {
+                var parents = await db.TicketCategories.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.ParentId, cancellationToken);
+                if (CategoryHierarchy.CreatesCycle(category.Id, newParent, parents))
+                {
+                    throw CategoryHierarchy.CycleError();
+                }
+            }
+
             if (input.DefaultDepartmentId is { } department && department != category.DefaultDepartmentId)
             {
                 await OrganizationUnits.EnsureDepartmentActiveAsync(db, department, cancellationToken);

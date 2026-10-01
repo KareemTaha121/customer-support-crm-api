@@ -180,6 +180,9 @@
   <data name="CATEGORY_IN_USE" xml:space="preserve">
     <value>Move or delete the sub-categories first.</value>
   </data>
+  <data name="CATEGORY_CYCLE" xml:space="preserve">
+    <value>A category cannot be moved under itself or one of its subcategories.</value>
+  </data>
   <data name="ASSIGN_FORBIDDEN" xml:space="preserve">
     <value>You can only assign tickets to yourself.</value>
   </data>

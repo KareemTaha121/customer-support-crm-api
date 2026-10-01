@@ -219,6 +219,9 @@
   <data name="CATEGORY_IN_USE" xml:space="preserve">
     <value>انقل التصنيفات الفرعية أو احذفها أولاً.</value>
   </data>
+  <data name="CATEGORY_CYCLE" xml:space="preserve">
+    <value>لا يمكن نقل التصنيف تحت نفسه أو تحت أحد تصنيفاته الفرعية.</value>
+  </data>
   <data name="ASSIGN_FORBIDDEN" xml:space="preserve">
     <value>يمكنك إسناد التذاكر إلى نفسك فقط.</value>
   </data>
