@@ -117,6 +117,15 @@
   <data name="OUT_OF_SCOPE" xml:space="preserve">
     <value>You do not have access to this branch or department.</value>
   </data>
+  <data name="ORGANIZATION_UNIT_INACTIVE" xml:space="preserve">
+    <value>The branch or department is inactive.</value>
+  </data>
+  <data name="BRANCH_NOT_FOUND" xml:space="preserve">
+    <value>The branch was not found.</value>
+  </data>
+  <data name="DEPARTMENT_NOT_FOUND" xml:space="preserve">
+    <value>The department was not found.</value>
+  </data>
   <data name="ORGANIZATION_NOT_CONFIGURED" xml:space="preserve">
     <value>The organization has not been configured.</value>
   </data>

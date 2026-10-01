@@ -118,6 +118,51 @@ public static class AccessScopeExtensions
     }
 }
 
+/// <summary>
+/// Checks for writes that place data in a branch/department: the unit must exist (404) and be
+/// active (422 <see cref="OrganizationErrors.InactiveUnit"/>). Callers check only units that change,
+/// so records already in a deactivated unit stay editable.
+/// </summary>
+internal static class OrganizationUnits
+{
+    /// <summary>Branch must exist and be active; department (if any) must belong to it and be active.</summary>
+    public static async Task EnsureValidAsync(IApplicationDbContext db, Guid branchId, Guid? departmentId, CancellationToken cancellationToken)
+    {
+        var branchActive = await db.Branches.Where(b => b.Id == branchId).Select(b => (bool?)b.IsActive).SingleOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(OrganizationErrors.BranchNotFound, "The branch was not found.");
+
+        var departmentActive = true;
+        if (departmentId is { } id)
+        {
+            departmentActive = await db.Departments.Where(d => d.Id == id && d.BranchId == branchId).Select(d => (bool?)d.IsActive).SingleOrDefaultAsync(cancellationToken)
+                ?? throw new NotFoundException(OrganizationErrors.DepartmentNotFound, "The department was not found in this branch.");
+        }
+
+        if (!branchActive || !departmentActive)
+        {
+            throw Inactive();
+        }
+    }
+
+    /// <summary>For department-only references (category default, SLA policy, assignment rule target).</summary>
+    public static async Task EnsureDepartmentActiveAsync(IApplicationDbContext db, Guid departmentId, CancellationToken cancellationToken)
+    {
+        var department = await db.Departments
+            .Where(d => d.Id == departmentId)
+            .Select(d => new { d.IsActive, BranchActive = db.Branches.Any(b => b.Id == d.BranchId && b.IsActive) })
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(OrganizationErrors.DepartmentNotFound, "The department was not found.");
+
+        if (!department.IsActive || !department.BranchActive)
+        {
+            throw Inactive();
+        }
+    }
+
+    public static UnprocessableException Inactive() =>
+        new(OrganizationErrors.InactiveUnit, "The branch or department is inactive.");
+}
+
 public static class OrganizationErrors
 {
     public const string OutOfScope = "OUT_OF_SCOPE";

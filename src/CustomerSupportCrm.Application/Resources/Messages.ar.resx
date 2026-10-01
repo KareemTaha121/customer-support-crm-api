@@ -127,7 +127,7 @@
     <value>بيانات المؤسسة غير صالحة.</value>
   </data>
   <data name="BRANCH_NOT_FOUND" xml:space="preserve">
-    <value>الفرع غير موجود أو غير نشط.</value>
+    <value>الفرع غير موجود.</value>
   </data>
   <data name="BRANCH_CODE_TAKEN" xml:space="preserve">
     <value>يوجد فرع آخر بنفس الرمز.</value>
@@ -136,7 +136,7 @@
     <value>رمز الفرع أو اسمه غير صالح.</value>
   </data>
   <data name="DEPARTMENT_NOT_FOUND" xml:space="preserve">
-    <value>القسم غير موجود أو غير نشط.</value>
+    <value>القسم غير موجود.</value>
   </data>
   <data name="DEPARTMENT_CODE_TAKEN" xml:space="preserve">
     <value>يوجد قسم آخر بنفس الرمز في هذا الفرع.</value>

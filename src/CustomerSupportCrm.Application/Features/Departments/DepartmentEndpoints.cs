@@ -33,9 +33,13 @@ internal sealed class SaveDepartmentHandler(IApplicationDbContext db, IAuditTrai
 {
     public async Task<DepartmentResponse> Handle(SaveDepartmentCommand request, CancellationToken cancellationToken)
     {
-        if (!await db.Branches.AnyAsync(b => b.Id == request.BranchId, cancellationToken))
+        var branchActive = await db.Branches.Where(b => b.Id == request.BranchId).Select(b => (bool?)b.IsActive).SingleOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(OrganizationErrors.BranchNotFound, "The branch was not found.");
+
+        // New departments cannot be added to a deactivated branch; existing ones stay editable.
+        if (request.DepartmentId is null && !branchActive)
         {
-            throw new NotFoundException(OrganizationErrors.BranchNotFound, "The branch was not found.");
+            throw OrganizationUnits.Inactive();
         }
 
         var code = Branch.NormalizeCode(request.Code);

@@ -1,4 +1,5 @@
 using CustomerSupportCrm.Application.Abstractions.Persistence;
+using CustomerSupportCrm.Application.Common.Authorization;
 using CustomerSupportCrm.Application.Common.Exceptions;
 using CustomerSupportCrm.Application.Resources;
 using CustomerSupportCrm.Contracts.Users;
@@ -82,20 +83,25 @@ internal static class UserQueries
         return requested;
     }
 
-    /// <summary>Checks that every branch exists and every department belongs to its branch.</summary>
+    /// <summary>
+    /// Checks that every branch exists, every department belongs to its branch, and every new scope
+    /// points at active units (422 ORGANIZATION_UNIT_INACTIVE). Scopes in <paramref name="current"/>
+    /// are kept even if their unit was deactivated, so editing other scopes still works.
+    /// </summary>
     public static async Task<IReadOnlyList<(Guid BranchId, Guid? DepartmentId)>> ResolveScopesAsync(
         IApplicationDbContext db,
         IReadOnlyList<UserScopeRequest> scopes,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<(Guid BranchId, Guid? DepartmentId)>? current = null)
     {
         var branchIds = scopes.Select(s => s.BranchId).Distinct().ToList();
         var departmentIds = scopes.Where(s => s.DepartmentId != null).Select(s => s.DepartmentId!.Value).Distinct().ToList();
 
-        var existingBranches = await db.Branches.Where(b => branchIds.Contains(b.Id)).Select(b => b.Id).ToListAsync(cancellationToken);
-        var departments = await db.Departments.Where(d => departmentIds.Contains(d.Id)).Select(d => new { d.Id, d.BranchId }).ToListAsync(cancellationToken);
+        var branches = await db.Branches.Where(b => branchIds.Contains(b.Id)).Select(b => new { b.Id, b.IsActive }).ToListAsync(cancellationToken);
+        var departments = await db.Departments.Where(d => departmentIds.Contains(d.Id)).Select(d => new { d.Id, d.BranchId, d.IsActive }).ToListAsync(cancellationToken);
 
         var invalid = scopes.Any(s =>
-            !existingBranches.Contains(s.BranchId)
+            !branches.Any(b => b.Id == s.BranchId)
             || (s.DepartmentId is { } departmentId && !departments.Any(d => d.Id == departmentId && d.BranchId == s.BranchId)));
         if (invalid)
         {
@@ -103,6 +109,15 @@ internal static class UserQueries
             [
                 new ValidationFailure("Scopes", "One or more branches or departments are invalid.") { ErrorCode = CustomerSupportCrm.Application.Common.Authorization.OrganizationErrors.DepartmentNotInBranch },
             ]);
+        }
+
+        var inactive = scopes
+            .Where(s => current is null || !current.Contains((s.BranchId, s.DepartmentId)))
+            .Any(s => !branches.Single(b => b.Id == s.BranchId).IsActive
+                || (s.DepartmentId is { } departmentId && !departments.Single(d => d.Id == departmentId).IsActive));
+        if (inactive)
+        {
+            throw OrganizationUnits.Inactive();
         }
 
         return [.. scopes.Select(s => (s.BranchId, s.DepartmentId)).Distinct()];

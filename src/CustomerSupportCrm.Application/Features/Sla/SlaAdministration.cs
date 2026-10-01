@@ -2,6 +2,7 @@ using System.Globalization;
 using CustomerSupportCrm.Application.Abstractions.Auditing;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
+using CustomerSupportCrm.Application.Common.Authorization;
 using CustomerSupportCrm.Application.Common.Exceptions;
 using CustomerSupportCrm.Contracts.Common;
 using CustomerSupportCrm.Contracts.Sla;
@@ -92,6 +93,11 @@ internal sealed class SaveSlaPolicyHandler(IApplicationDbContext db, IAuditTrail
         {
             policy = SlaPolicy.Create(input.Name);
             db.SlaPolicies.Add(policy);
+        }
+
+        if (input.DepartmentId is { } department && (request.PolicyId is null || department != policy.DepartmentId))
+        {
+            await OrganizationUnits.EnsureDepartmentActiveAsync(db, department, cancellationToken);
         }
 
         policy.Update(
@@ -202,6 +208,12 @@ internal sealed class SaveAssignmentRuleHandler(IApplicationDbContext db, IAudit
         {
             rule = AssignmentRule.Create();
             db.AssignmentRules.Add(rule);
+        }
+
+        // The rule moves matching tickets into SetDepartmentId, so a new target must be active.
+        if (input.SetDepartmentId is { } target && (request.RuleId is null || target != rule.SetDepartmentId))
+        {
+            await OrganizationUnits.EnsureDepartmentActiveAsync(db, target, cancellationToken);
         }
 
         rule.Update(

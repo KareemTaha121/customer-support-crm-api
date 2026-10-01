@@ -59,7 +59,8 @@ internal sealed class SetUserScopesHandler(IApplicationDbContext db, IAuditTrail
         var user = await db.Users.Include(u => u.Scopes).SingleOrDefaultAsync(u => u.Id == userId, cancellationToken)
             ?? throw new NotFoundException(UserErrors.UserNotFound, "The user was not found.");
 
-        var scopes = await UserQueries.ResolveScopesAsync(db, request.Scopes, cancellationToken);
+        var current = user.Scopes.Select(s => (s.BranchId, s.DepartmentId)).ToList();
+        var scopes = await UserQueries.ResolveScopesAsync(db, request.Scopes, cancellationToken, current);
         var before = user.Scopes.Select(s => new { s.BranchId, s.DepartmentId }).ToList();
 
         user.SetScopes(scopes);

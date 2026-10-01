@@ -102,23 +102,6 @@ internal sealed class CreateCustomerHandler(
     }
 }
 
-internal static class OrganizationUnits
-{
-    /// <summary>Branch must be active; department (if any) must be active and belong to the branch.</summary>
-    public static async Task EnsureValidAsync(IApplicationDbContext db, Guid branchId, Guid? departmentId, CancellationToken cancellationToken)
-    {
-        if (!await db.Branches.AnyAsync(b => b.Id == branchId && b.IsActive, cancellationToken))
-        {
-            throw new NotFoundException(OrganizationErrors.BranchNotFound, "The branch was not found or is inactive.");
-        }
-
-        if (departmentId is { } id && !await db.Departments.AnyAsync(d => d.Id == id && d.BranchId == branchId && d.IsActive, cancellationToken))
-        {
-            throw new NotFoundException(OrganizationErrors.DepartmentNotFound, "The department was not found in this branch or is inactive.");
-        }
-    }
-}
-
 // ---------- Update / delete ----------
 
 public sealed record UpdateCustomerCommand(
