@@ -31,6 +31,6 @@ internal sealed class GetCurrentUserHandler(IApplicationDbContext db, ICurrentUs
         }
 
         var profile = await UserAccessProfile.LoadAsync(db, userId, cancellationToken);
-        return new CurrentUserResponse(userId.Value, user.Email, user.DisplayName, profile.Roles, profile.Permissions);
+        return new CurrentUserResponse(userId.Value, user.Email, user.DisplayName, profile.Roles, profile.Permissions, profile.HasDataAccess);
     }
 }

@@ -67,7 +67,7 @@ public sealed class UserSessionService(
         var response = new AccessTokenResponse(
             access.Token,
             access.ExpiresAt,
-            new CurrentUserResponse(user.Id.Value, user.Email, user.DisplayName, profile.Roles, profile.Permissions));
+            new CurrentUserResponse(user.Id.Value, user.Email, user.DisplayName, profile.Roles, profile.Permissions, profile.HasDataAccess));
 
         return new AuthenticatedSession(response, refreshToken, stored.ExpiresAt);
     }

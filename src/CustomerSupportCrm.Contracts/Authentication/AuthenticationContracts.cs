@@ -10,9 +10,14 @@ public sealed record ChangePasswordRequest(string CurrentPassword, string NewPas
 /// </summary>
 public sealed record AccessTokenResponse(string AccessToken, DateTimeOffset ExpiresAt, CurrentUserResponse User);
 
+/// <param name="HasDataAccess">
+/// False when the user has neither <c>data.all_branches</c> nor any branch/department scope, so every
+/// ticket and customer list is empty; the web app explains this instead of showing an empty workspace.
+/// </param>
 public sealed record CurrentUserResponse(
     Guid Id,
     string Email,
     string DisplayName,
     IReadOnlyList<string> Roles,
-    IReadOnlyList<string> Permissions);
+    IReadOnlyList<string> Permissions,
+    bool HasDataAccess);
