@@ -89,8 +89,17 @@ public sealed class AttachmentService(IApplicationDbContext db, IFileStorage sto
         return [.. rows.Select(a => new AttachmentResponse(a.Id, a.FileName, a.ContentType, a.Size, a.IsPublic, a.UploadedByName, a.CreatedAt, downloadUrl(a.Id)))];
     }
 
-    public static AttachmentResponse ToResponse(Attachment a, string? uploadedByName, string downloadUrl) =>
-        new(a.Id, a.FileName, a.ContentType, a.Size, a.IsPublic, uploadedByName, a.CreatedAt, downloadUrl);
+    /// <summary>Response for a just-stored attachment, with the uploader's name resolved the same way as <see cref="ListAsync"/>.</summary>
+    public async Task<AttachmentResponse> ToResponseAsync(Attachment a, string downloadUrl, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        var uploadedByName = a.UploadedBy is { } userId
+            ? await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.DisplayName).FirstOrDefaultAsync(cancellationToken)
+            : a.UploadedByCustomerId is { } customerId
+                ? await db.Customers.IgnoreQueryFilters().AsNoTracking().Where(c => c.Id == customerId).Select(c => c.Name).FirstOrDefaultAsync(cancellationToken)
+                : null;
+        return new(a.Id, a.FileName, a.ContentType, a.Size, a.IsPublic, uploadedByName, a.CreatedAt, downloadUrl);
+    }
 
     /// <summary>Download result: attachment disposition and no content sniffing.</summary>
     public static IResult ToDownload(StoredFile file, HttpContext http)

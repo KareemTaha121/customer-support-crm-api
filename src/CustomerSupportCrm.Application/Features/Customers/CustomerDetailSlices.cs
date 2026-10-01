@@ -257,7 +257,7 @@ internal sealed class UploadCustomerAttachmentHandler(
         timeline.Record(request.CustomerId, CustomerActivityTypes.AttachmentAdded, attachment.FileName, data: new { attachment.Id, attachment.FileName });
         await db.SaveChangesAsync(cancellationToken);
 
-        return AttachmentService.ToResponse(attachment, null, CustomerAttachmentPaths.Download(request.CustomerId, attachment.Id));
+        return await attachments.ToResponseAsync(attachment, CustomerAttachmentPaths.Download(request.CustomerId, attachment.Id), cancellationToken);
     }
 }
 

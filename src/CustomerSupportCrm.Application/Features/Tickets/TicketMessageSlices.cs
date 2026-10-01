@@ -119,7 +119,7 @@ internal sealed class UploadTicketAttachmentHandler(IApplicationDbContext db, IA
         await TicketQueries.EnsureAccessibleAsync(db, await scopes.GetAsync(cancellationToken), request.TicketId, cancellationToken);
         var attachment = await attachments.StoreAsync(AttachmentOwnerTypes.Ticket, request.TicketId, null, request.FileName, request.Content, request.Length, false, currentUser.UserId, null, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return AttachmentService.ToResponse(attachment, null, TicketQueries.DownloadPath(request.TicketId, attachment.Id));
+        return await attachments.ToResponseAsync(attachment, TicketQueries.DownloadPath(request.TicketId, attachment.Id), cancellationToken);
     }
 }
 

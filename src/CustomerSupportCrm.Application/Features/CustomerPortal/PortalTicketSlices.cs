@@ -153,7 +153,7 @@ internal sealed class PortalUploadAttachmentHandler(IApplicationDbContext db, IC
         var ticket = await PortalTickets.LoadOwnAsync(db, customer, request.TicketId, cancellationToken);
         var attachment = await attachments.StoreAsync(AttachmentOwnerTypes.Ticket, ticket.Id, null, request.FileName, request.Content, request.Length, true, null, customer.CustomerId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return AttachmentService.ToResponse(attachment, null, PortalTickets.DownloadPath(ticket.Id, attachment.Id));
+        return await attachments.ToResponseAsync(attachment, PortalTickets.DownloadPath(ticket.Id, attachment.Id), cancellationToken);
     }
 }
 
