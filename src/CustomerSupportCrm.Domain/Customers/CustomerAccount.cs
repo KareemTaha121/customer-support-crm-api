@@ -150,22 +150,30 @@ public sealed class CustomerAccount : Entity<Guid>, IAuditableEntity
 
     public void SetActive(bool active) => IsActive = active && EmailVerified;
 
+    /// <summary>Keeps the portal name in step with the customer record (the profile and token read it).</summary>
+    public void Rename(string displayName) => DisplayName = ValidName(displayName);
+
     private static CustomerAccount New(Guid customerId, EmailAddress email, string displayName, string passwordHash)
     {
         ArgumentNullException.ThrowIfNull(email);
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+        return new CustomerAccount(Guid.CreateVersion7())
+        {
+            CustomerId = customerId,
+            Email = email.Value,
+            DisplayName = ValidName(displayName),
+            PasswordHash = passwordHash,
+        };
+    }
+
+    private static string ValidName(string displayName)
+    {
         var name = displayName?.Trim();
         if (string.IsNullOrEmpty(name) || name.Length > Customer.NameMaxLength)
         {
             throw new DomainException(InvalidCode, "The name is not valid.");
         }
 
-        return new CustomerAccount(Guid.CreateVersion7())
-        {
-            CustomerId = customerId,
-            Email = email.Value,
-            DisplayName = name,
-            PasswordHash = passwordHash,
-        };
+        return name;
     }
 }

@@ -283,6 +283,10 @@ internal sealed class PortalProfileEndpoints : IPortalEndpoint
 
                 var record = await db.Customers.SingleAsync(c => c.Id == customer.CustomerId, ct);
                 record.UpdateProfile(record.Type, request.Name, record.CompanyName, request.Language, record.Tags);
+
+                // The profile response and the next token read the account's name, so rename it too.
+                var account = await db.CustomerAccounts.SingleAsync(a => a.Id == customer.AccountId, ct);
+                account.Rename(request.Name);
                 await db.SaveChangesAsync(ct);
                 return ApiResults.Ok(await PortalSessions.ProfileAsync(db, customer.AccountId, ct));
             })
