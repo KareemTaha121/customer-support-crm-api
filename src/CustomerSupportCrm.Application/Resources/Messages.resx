@@ -195,6 +195,15 @@
   <data name="CHAT_NOT_FOUND" xml:space="preserve">
     <value>The conversation was not found.</value>
   </data>
+  <data name="CHAT_CLOSED" xml:space="preserve">
+    <value>The conversation is closed.</value>
+  </data>
+  <data name="NO_ACTIVE_BRANCH" xml:space="preserve">
+    <value>No active branch is configured.</value>
+  </data>
+  <data name="OUTBOUND_MESSAGE_NOT_FOUND" xml:space="preserve">
+    <value>The message was not found.</value>
+  </data>
   <data name="TASK_NOT_FOUND" xml:space="preserve">
     <value>The task was not found.</value>
   </data>
@@ -245,5 +254,8 @@
   </data>
   <data name="WEBHOOK_NOT_FOUND" xml:space="preserve">
     <value>The webhook was not found.</value>
+  </data>
+  <data name="WEBHOOK_DELIVERY_NOT_FOUND" xml:space="preserve">
+    <value>The delivery was not found.</value>
   </data>
 </root>

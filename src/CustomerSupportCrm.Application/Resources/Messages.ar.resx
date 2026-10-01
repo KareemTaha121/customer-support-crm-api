@@ -234,6 +234,15 @@
   <data name="CHAT_NOT_FOUND" xml:space="preserve">
     <value>المحادثة غير موجودة.</value>
   </data>
+  <data name="CHAT_CLOSED" xml:space="preserve">
+    <value>المحادثة مغلقة.</value>
+  </data>
+  <data name="NO_ACTIVE_BRANCH" xml:space="preserve">
+    <value>لا يوجد فرع نشط مُعدّ.</value>
+  </data>
+  <data name="OUTBOUND_MESSAGE_NOT_FOUND" xml:space="preserve">
+    <value>الرسالة غير موجودة.</value>
+  </data>
   <data name="TASK_NOT_FOUND" xml:space="preserve">
     <value>المهمة غير موجودة.</value>
   </data>
@@ -314,6 +323,9 @@
   </data>
   <data name="WEBHOOK_NOT_FOUND" xml:space="preserve">
     <value>الـ Webhook غير موجود.</value>
+  </data>
+  <data name="WEBHOOK_DELIVERY_NOT_FOUND" xml:space="preserve">
+    <value>عملية الإرسال غير موجودة.</value>
   </data>
   <data name="INVALID_WEBHOOK" xml:space="preserve">
     <value>بيانات الـ Webhook غير صالحة.</value>
