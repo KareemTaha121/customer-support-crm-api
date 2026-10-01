@@ -352,6 +352,13 @@ internal sealed class ChannelAdministrationEndpoints : IEndpoint
             {
                 var message = await db.OutboundMessages.SingleOrDefaultAsync(m => m.Id == id, ct)
                     ?? throw new NotFoundException("OUTBOUND_MESSAGE_NOT_FOUND", "The message was not found.");
+
+                // Retry re-queues the row; on a delivered message that would send it to the customer twice.
+                if (message.Status == OutboundStatus.Sent)
+                {
+                    throw new ConflictException("OUTBOUND_ALREADY_SENT", "This message was already sent.");
+                }
+
                 message.Retry(time.GetUtcNow());
                 await db.SaveChangesAsync(ct);
                 return ApiResults.Success();

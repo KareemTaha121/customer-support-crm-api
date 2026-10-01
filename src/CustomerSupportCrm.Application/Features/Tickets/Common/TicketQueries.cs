@@ -1,3 +1,5 @@
+using CustomerSupportCrm.Application.Abstractions.Authentication;
+using CustomerSupportCrm.Application.Abstractions.Channels;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Authorization;
 using CustomerSupportCrm.Application.Common.Exceptions;
@@ -173,8 +175,20 @@ internal static class TicketQueries
             t.UpdatedAt);
     }
 
+    /// <summary>Staff view of reply deliveries. Customer-facing lists pass none, so they never carry delivery data.</summary>
+    public sealed record DeliveryView(Func<TicketChannel, bool> IsChannelConfigured, bool IncludeErrors)
+    {
+        /// <summary>Provider errors can contain hostnames or API responses, so only <c>channels.manage</c> sees them.</summary>
+        public static DeliveryView For(IEnumerable<IMessageSender> senders, ICurrentUser currentUser)
+        {
+            var configured = senders.Where(s => s.IsConfigured).Select(s => s.Channel).ToHashSet();
+            return new DeliveryView(configured.Contains, currentUser.HasPermission(Permissions.ChannelsManage));
+        }
+    }
+
     /// <param name="publicOnly">Customer-facing view: no internal notes, no internal files.</param>
-    public static async Task<IReadOnlyList<TicketMessageResponse>> GetMessagesAsync(IApplicationDbContext db, Guid ticketId, bool publicOnly, Func<Guid, string> downloadUrl, CancellationToken cancellationToken)
+    /// <param name="deliveryView">Staff only: adds the outbox delivery of each agent reply.</param>
+    public static async Task<IReadOnlyList<TicketMessageResponse>> GetMessagesAsync(IApplicationDbContext db, Guid ticketId, bool publicOnly, Func<Guid, string> downloadUrl, CancellationToken cancellationToken, DeliveryView? deliveryView = null)
     {
         var messages = await db.TicketMessages.AsNoTracking()
             .Where(m => m.TicketId == ticketId && (!publicOnly || !m.IsInternal))
@@ -199,6 +213,22 @@ internal static class TicketQueries
             .Where(a => a.OwnerType == AttachmentOwnerTypes.Ticket && a.OwnerId == ticketId && messageIds.Contains(a.ParentId) && (!publicOnly || a.IsPublic))
             .ToListAsync(cancellationToken);
 
+        var deliveries = deliveryView is null
+            ? []
+            : await db.OutboundMessages.AsNoTracking()
+                .Where(o => o.TicketId == ticketId && o.TicketMessageId != null && messageIds.Contains(o.TicketMessageId))
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => new { o.Id, o.TicketMessageId, o.Channel, o.Status, o.Attempts, o.SentAt, o.LastError })
+                .ToListAsync(cancellationToken);
+
+        TicketMessageDeliveryResponse? DeliveryOf(Guid messageId)
+        {
+            var d = deliveries.FirstOrDefault(x => x.TicketMessageId == messageId);
+            return d is null || deliveryView is null
+                ? null
+                : new TicketMessageDeliveryResponse(d.Id, d.Channel.ToString(), d.Status.ToString(), d.Attempts, d.SentAt, deliveryView.IsChannelConfigured(d.Channel), deliveryView.IncludeErrors ? d.LastError : null);
+        }
+
         return
         [
             .. messages.Select(m => new TicketMessageResponse(
@@ -216,7 +246,8 @@ internal static class TicketQueries
                 m.IsInternal,
                 m.Channel.ToString(),
                 m.CreatedAt,
-                [.. files.Where(f => f.ParentId == m.Id).Select(f => new AttachmentResponse(f.Id, f.FileName, f.ContentType, f.Size, f.IsPublic, null, f.CreatedAt, downloadUrl(f.Id)))])),
+                [.. files.Where(f => f.ParentId == m.Id).Select(f => new AttachmentResponse(f.Id, f.FileName, f.ContentType, f.Size, f.IsPublic, null, f.CreatedAt, downloadUrl(f.Id)))],
+                DeliveryOf(m.Id))),
         ];
     }
 

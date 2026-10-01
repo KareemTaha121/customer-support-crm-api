@@ -5,6 +5,12 @@ public sealed class EmailOptions
 {
     public const string SectionName = "Channels:Email";
 
+    /// <summary><see cref="Provider"/> value that logs emails instead of sending them (Development only).</summary>
+    public const string LogProvider = "Log";
+
+    /// <summary><c>Smtp</c> (default) or <c>Log</c>.</summary>
+    public string Provider { get; init; } = "Smtp";
+
     public bool Enabled { get; init; }
 
     public string? Host { get; init; }

@@ -1,4 +1,5 @@
 using CustomerSupportCrm.Application.Abstractions.Authentication;
+using CustomerSupportCrm.Application.Abstractions.Channels;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Authorization;
@@ -186,12 +187,13 @@ internal sealed class GetTicketHandler(IApplicationDbContext db, IAccessScopePro
 
 public sealed record GetTicketMessagesQuery(Guid TicketId) : IRequest<IReadOnlyList<TicketMessageResponse>>;
 
-internal sealed class GetTicketMessagesHandler(IApplicationDbContext db, IAccessScopeProvider scopes) : IRequestHandler<GetTicketMessagesQuery, IReadOnlyList<TicketMessageResponse>>
+internal sealed class GetTicketMessagesHandler(IApplicationDbContext db, IAccessScopeProvider scopes, IEnumerable<IMessageSender> senders, ICurrentUser currentUser)
+    : IRequestHandler<GetTicketMessagesQuery, IReadOnlyList<TicketMessageResponse>>
 {
     public async Task<IReadOnlyList<TicketMessageResponse>> Handle(GetTicketMessagesQuery request, CancellationToken cancellationToken)
     {
         await TicketQueries.EnsureAccessibleAsync(db, await scopes.GetAsync(cancellationToken), request.TicketId, cancellationToken);
-        return await TicketQueries.GetMessagesAsync(db, request.TicketId, publicOnly: false, id => TicketQueries.DownloadPath(request.TicketId, id), cancellationToken);
+        return await TicketQueries.GetMessagesAsync(db, request.TicketId, publicOnly: false, id => TicketQueries.DownloadPath(request.TicketId, id), cancellationToken, TicketQueries.DeliveryView.For(senders, currentUser));
     }
 }
 

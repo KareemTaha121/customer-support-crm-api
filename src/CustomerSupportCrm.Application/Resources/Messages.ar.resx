@@ -243,6 +243,9 @@
   <data name="OUTBOUND_MESSAGE_NOT_FOUND" xml:space="preserve">
     <value>الرسالة غير موجودة.</value>
   </data>
+  <data name="OUTBOUND_ALREADY_SENT" xml:space="preserve">
+    <value>تم إرسال هذه الرسالة بالفعل.</value>
+  </data>
   <data name="TASK_NOT_FOUND" xml:space="preserve">
     <value>المهمة غير موجودة.</value>
   </data>

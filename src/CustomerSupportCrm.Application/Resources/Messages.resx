@@ -204,6 +204,9 @@
   <data name="OUTBOUND_MESSAGE_NOT_FOUND" xml:space="preserve">
     <value>The message was not found.</value>
   </data>
+  <data name="OUTBOUND_ALREADY_SENT" xml:space="preserve">
+    <value>This message was already sent.</value>
+  </data>
   <data name="TASK_NOT_FOUND" xml:space="preserve">
     <value>The task was not found.</value>
   </data>

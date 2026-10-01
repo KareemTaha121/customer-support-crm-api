@@ -1,4 +1,5 @@
 using CustomerSupportCrm.Application.Abstractions.Authentication;
+using CustomerSupportCrm.Application.Abstractions.Channels;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Authorization;
@@ -78,7 +79,8 @@ internal sealed class AddTicketMessageHandler(
     IApplicationDbContext db,
     IAccessScopeProvider scopes,
     ICurrentUser currentUser,
-    TicketMessageWriter writer)
+    TicketMessageWriter writer,
+    IEnumerable<IMessageSender> senders)
     : IRequestHandler<AddTicketMessageCommand, TicketMessageResponse>
 {
     public async Task<TicketMessageResponse> Handle(AddTicketMessageCommand request, CancellationToken cancellationToken)
@@ -103,7 +105,7 @@ internal sealed class AddTicketMessageHandler(
             cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
-        var messages = await TicketQueries.GetMessagesAsync(db, ticket.Id, publicOnly: false, id => TicketQueries.DownloadPath(ticket.Id, id), cancellationToken);
+        var messages = await TicketQueries.GetMessagesAsync(db, ticket.Id, publicOnly: false, id => TicketQueries.DownloadPath(ticket.Id, id), cancellationToken, TicketQueries.DeliveryView.For(senders, currentUser));
         return messages.Single(m => m.Id == message.Id);
     }
 }

@@ -108,7 +108,22 @@ public sealed record TicketMessageResponse(
     bool IsInternal,
     string Channel,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<AttachmentResponse> Attachments);
+    IReadOnlyList<AttachmentResponse> Attachments,
+    TicketMessageDeliveryResponse? Delivery = null);
+
+/// <summary>
+/// Delivery of an agent reply through the outbox (staff lists only). <paramref name="Channel"/> is the
+/// delivery channel, which can differ from the message channel (a portal reply is emailed).
+/// <paramref name="LastError"/> is filled only for <c>channels.manage</c>.
+/// </summary>
+public sealed record TicketMessageDeliveryResponse(
+    Guid OutboundMessageId,
+    string Channel,
+    string Status,
+    int Attempts,
+    DateTimeOffset? SentAt,
+    bool ChannelConfigured,
+    string? LastError);
 
 public sealed record TicketHistoryResponse(Guid Id, string Action, string? OldValue, string? NewValue, string? ActorName, DateTimeOffset OccurredAt);
 

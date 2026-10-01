@@ -111,7 +111,11 @@ public static class DependencyInjection
         services.AddOptions<SmsOptions>().BindConfiguration(SmsOptions.SectionName);
         services.AddOptions<CustomerPortalOptions>().BindConfiguration(CustomerPortalOptions.SectionName);
 
-        services.AddSingleton<IMessageSender, SmtpEmailSender>();
+        // One Email sender either way, so the dispatcher and GET /channels/status see a single Email channel.
+        services.AddSingleton<IMessageSender>(sp =>
+            string.Equals(sp.GetRequiredService<IOptions<EmailOptions>>().Value.Provider, EmailOptions.LogProvider, StringComparison.OrdinalIgnoreCase)
+                ? ActivatorUtilities.CreateInstance<LogEmailSender>(sp)
+                : ActivatorUtilities.CreateInstance<SmtpEmailSender>(sp));
         services.AddHttpClient<IMessageSender, WhatsAppSender>(client => client.Timeout = TimeSpan.FromSeconds(20));
         services.AddHttpClient<IMessageSender, TwilioSmsSender>(client => client.Timeout = TimeSpan.FromSeconds(20));
 
