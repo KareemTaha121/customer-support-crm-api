@@ -409,6 +409,12 @@ internal sealed class ChatbotHandler(IApplicationDbContext db, IKnowledgeSearch 
 
     public async Task<ChatbotResponse> Handle(ChatbotCommand request, CancellationToken cancellationToken)
     {
+        // Fail before the knowledge search: without a provider there is nothing to answer with.
+        if (!ai.IsConfigured)
+        {
+            throw new ServiceUnavailableException(AiErrors.NotConfigured, "AI features are not configured.");
+        }
+
         var question = request.Messages[^1].Content;
         var knowledge = await KnowledgeContext.LoadAsync(db, search, question, publicOnly: true, cancellationToken, request.Language);
         var organization = await db.Organizations.AsNoTracking().Select(o => o.Name).FirstOrDefaultAsync(cancellationToken) ?? "our company";

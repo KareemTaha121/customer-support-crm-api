@@ -1,6 +1,8 @@
 using System.Globalization;
+using CustomerSupportCrm.Application.Abstractions.Ai;
 using CustomerSupportCrm.Application.Abstractions.Auditing;
 using CustomerSupportCrm.Application.Abstractions.Authentication;
+using CustomerSupportCrm.Application.Abstractions.Channels;
 using CustomerSupportCrm.Application.Abstractions.Http;
 using CustomerSupportCrm.Application.Abstractions.Persistence;
 using CustomerSupportCrm.Application.Common.Exceptions;
@@ -66,6 +68,12 @@ public sealed class SettingsReader(IApplicationDbContext db)
     }
 }
 
+/// <summary>
+/// Server-side prerequisites of some settings, for warnings on /admin/settings. Booleans only: no
+/// keys, hosts or other configuration.
+/// </summary>
+public sealed record SettingsStatusResponse(bool AiProviderConfigured, bool EmailConfigured);
+
 internal sealed class SettingsEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
@@ -75,6 +83,12 @@ internal sealed class SettingsEndpoints : IEndpoint
         group.MapGet("/", async (SettingsReader settings, CancellationToken ct) => ApiResults.Ok(await settings.ListAsync(false, ct)))
             .WithName("ListSettings")
             .Produces<ApiResponse<IReadOnlyList<SettingResponse>>>();
+
+        group.MapGet("/status", (IAiCompletionClient ai, IEnumerable<IMessageSender> senders) =>
+                ApiResults.Ok(new SettingsStatusResponse(ai.IsConfigured, senders.Any(s => s.Channel == TicketChannel.Email && s.IsConfigured))))
+            .RequireAuthorization(Permissions.SettingsManage)
+            .WithName("GetSettingsStatus")
+            .Produces<ApiResponse<SettingsStatusResponse>>();
 
         group.MapPut("/", async (UpdateSettingsRequest request, IApplicationDbContext db, ICurrentUser user, IAuditTrail audit, TimeProvider time, SettingsReader settings, CancellationToken ct) =>
             {
@@ -125,8 +139,18 @@ internal sealed class SettingsEndpoints : IEndpoint
 internal sealed class PublicFeatureEndpoints : IPublicEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app) =>
-        app.MapGet("/features", async (SettingsReader settings, CancellationToken ct) =>
-                ApiResults.Ok((await settings.ListAsync(publicOnly: true, ct)).ToDictionary(s => s.Key, s => s.Value)))
+        app.MapGet("/features", async (SettingsReader settings, IAiCompletionClient ai, CancellationToken ct) =>
+            {
+                var features = (await settings.ListAsync(publicOnly: true, ct)).ToDictionary(s => s.Key, s => s.Value);
+
+                // The chatbot needs an AI provider; without one the portal must not offer it.
+                if (!ai.IsConfigured)
+                {
+                    features[SystemSettings.ChatbotEnabled] = "false";
+                }
+
+                return ApiResults.Ok(features);
+            })
             .WithTags("Settings")
             .WithName("GetPublicFeatures")
             .Produces<ApiResponse<Dictionary<string, string>>>();
