@@ -141,6 +141,22 @@ internal sealed class SaveKnowledgeCategoryHandler(IApplicationDbContext db) : I
             db.KnowledgeCategories.Add(category);
         }
 
+        // Same rules as ticket categories: the parent must exist (a missing one used to fail at the
+        // foreign key) and must not be the category or one of its subcategories.
+        if (input.ParentId is { } parentId && parentId != category.ParentId)
+        {
+            var parents = await db.KnowledgeCategories.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.ParentId, cancellationToken);
+            if (!parents.ContainsKey(parentId))
+            {
+                throw new NotFoundException(KnowledgeErrors.CategoryNotFound, "The parent category was not found.");
+            }
+
+            if (CategoryHierarchy.CreatesCycle(category.Id, parentId, parents))
+            {
+                throw CategoryHierarchy.CycleError();
+            }
+        }
+
         category.Update(input.Name, input.NameAr, input.Description, input.ParentId, input.SortOrder, input.IsPublic);
         await db.SaveChangesAsync(cancellationToken);
         return new KnowledgeCategoryResponse(category.Id, category.Name, category.NameAr, category.Description, category.ParentId, category.SortOrder, category.IsPublic, 0);
