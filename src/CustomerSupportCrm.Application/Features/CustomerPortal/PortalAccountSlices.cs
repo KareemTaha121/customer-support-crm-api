@@ -336,12 +336,22 @@ internal sealed class GrantPortalAccessHandler(IApplicationDbContext db, IAccess
     {
         var customer = await CustomerQueries.LoadAsync(db, await scopes.GetAsync(cancellationToken), request.CustomerId, cancellationToken);
         var email = EmailAddress.Create(request.Email);
-        if (await db.CustomerAccounts.AnyAsync(a => a.Email == email.Value, cancellationToken))
+        var existing = await db.CustomerAccounts.SingleOrDefaultAsync(a => a.Email == email.Value, cancellationToken);
+
+        // A revoked account of this customer is reactivated; any other existing account is a conflict.
+        if (existing is { IsActive: false } && existing.CustomerId == customer.Id)
+        {
+            existing.ReactivateByStaff(hasher.Hash(request.Password));
+        }
+        else if (existing is not null)
         {
             throw new ConflictException(PortalErrors.AccountExists, "A portal account with this email already exists.");
         }
+        else
+        {
+            db.CustomerAccounts.Add(CustomerAccount.CreateByStaff(customer.Id, email, customer.Name, hasher.Hash(request.Password)));
+        }
 
-        db.CustomerAccounts.Add(CustomerAccount.CreateByStaff(customer.Id, email, customer.Name, hasher.Hash(request.Password)));
         if (!customer.Contacts.Any(c => c.Type == ContactType.Email && c.Value == email.Value))
         {
             customer.AddContact(ContactType.Email, email.Value, "portal", isPrimary: false);

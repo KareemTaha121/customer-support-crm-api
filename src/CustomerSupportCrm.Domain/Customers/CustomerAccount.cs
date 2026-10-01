@@ -150,6 +150,21 @@ public sealed class CustomerAccount : Entity<Guid>, IAuditableEntity
 
     public void SetActive(bool active) => IsActive = active && EmailVerified;
 
+    /// <summary>
+    /// Staff grant access again to a revoked account: like <see cref="CreateByStaff"/>, staff vouch
+    /// for the email, so it becomes verified and active with the new password and no lockout.
+    /// </summary>
+    public void ReactivateByStaff(string passwordHash)
+    {
+        ChangePasswordHash(passwordHash);
+        EmailVerified = true;
+        IsActive = true;
+        VerificationCodeHash = null;
+        VerificationExpiresAt = null;
+        FailedLoginAttempts = 0;
+        LockoutEndsAt = null;
+    }
+
     /// <summary>Keeps the portal name in step with the customer record (the profile and token read it).</summary>
     public void Rename(string displayName) => DisplayName = ValidName(displayName);
 
